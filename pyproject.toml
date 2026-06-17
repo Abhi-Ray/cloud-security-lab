@@ -1,0 +1,121 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cloud-security-lab"
+version = "0.1.0"
+description = "Autonomous Cloud Security Engineering Lab — AI-assisted security scanning, compliance checking, and detection engineering for AWS and Azure"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "Cloud Security Lab" },
+]
+keywords = [
+    "cloud-security",
+    "aws",
+    "azure",
+    "devsecops",
+    "compliance",
+    "iam",
+    "terraform",
+    "cis-benchmark",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "httpx>=0.27.0",
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "click>=8.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5.0",
+    "bandit>=1.7",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+]
+cloud = [
+    "boto3>=1.34",
+    "azure-identity>=1.16",
+    "azure-mgmt-resource>=23.0",
+]
+
+[project.scripts]
+cloudsec = "security_scanner.cli:main"
+cloudsec-comply = "compliance.cli:main"
+cloudsec-detect = "detectors.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/security_scanner", "src/compliance", "src/detectors", "src/automation"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "S",    # bandit (security)
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "DTZ",  # flake8-datetimez
+    "T20",  # flake8-print
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "S101",  # allow assert in tests
+    "T201",  # allow print (CLI tool)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105", "S106"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "-v",
+]
+markers = [
+    "unit: Unit tests (fast, no external deps)",
+    "integration: Integration tests",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "src"
+
+[tool.bandit]
+exclude_dirs = ["tests"]

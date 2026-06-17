@@ -1,0 +1,82 @@
+name: Terraform Validate
+on:
+  push:
+    paths:
+      - 'infra/**'
+    branches: [main]
+  pull_request:
+    paths:
+      - 'infra/**'
+    branches: [main]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.changes.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: changes
+        name: Detect changed modules
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- infra/ | cut -d'/' -f1-3 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          else
+            CHANGED=$(find infra -name '*.tf' -exec dirname {} \; | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+          echo "modules=$CHANGED" >> $GITHUB_OUTPUT
+
+  validate:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module:
+          - infra/aws/s3_secure_bucket
+          - infra/aws/iam_baseline
+          - infra/aws/cloudtrail
+          - infra/azure/nsg_baseline
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.0'
+
+      - name: Terraform Init
+        run: terraform -chdir=${{ matrix.module }} init -backend=false
+
+      - name: Terraform Format Check
+        run: terraform -chdir=${{ matrix.module }} fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform -chdir=${{ matrix.module }} validate
+
+      - name: TFLint (optional)
+        continue-on-error: true
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          cd ${{ matrix.module }}
+          tflint --init || true
+          tflint
+
+  security-check:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: infra/
+          soft_fail: true
+
+      - name: Run checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra/
+          soft_fail: true
+          output_format: cli
