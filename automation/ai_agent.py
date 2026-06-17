@@ -40,54 +40,22 @@ _PYTHON_SCANNER_TEMPLATE = textwrap.dedent('''\
     from __future__ import annotations
 
     import logging
-    from dataclasses import dataclass, field
-    from enum import Enum
     from typing import Any
+
+    from security_scanner.models import Finding, Severity
 
     __all__ = ["{class_name}"]
 
     logger = logging.getLogger(__name__)
 
 
-    class Severity(Enum):
-        """Finding severity levels."""
-        CRITICAL = "CRITICAL"
-        HIGH = "HIGH"
-        MEDIUM = "MEDIUM"
-        LOW = "LOW"
-        INFO = "INFO"
-
-
-    @dataclass
-    class Finding:
-        """A single security finding.
-
-        Attributes:
-            rule_id: Unique identifier for the check.
-            title: Human-readable title.
-            severity: Severity level.
-            resource: Affected resource identifier.
-            description: Detailed description.
-            remediation: Suggested fix.
-        """
-        rule_id: str
-        title: str
-        severity: Severity
-        resource: str
-        description: str
-        remediation: str
-
-
-    @dataclass
     class {class_name}:
         """Scanner for {title}.
 
         {description}
-
-        Attributes:
-            findings: Accumulated findings from the last scan.
         """
-        findings: list[Finding] = field(default_factory=list)
+
+        name: str = "{title}"
 
         def scan(self, config: dict[str, Any]) -> list[Finding]:
             """Run security checks against the provided configuration.
@@ -99,53 +67,62 @@ _PYTHON_SCANNER_TEMPLATE = textwrap.dedent('''\
             Returns:
                 List of security findings.
             """
-            self.findings.clear()
-            logger.info("Starting %s scan", self.__class__.__name__)
+            findings: list[Finding] = []
+            logger.info("Starting %s scan", self.name)
 
-            self._check_encryption(config)
-            self._check_public_access(config)
-            self._check_logging(config)
+            findings.extend(self._check_encryption(config))
+            findings.extend(self._check_public_access(config))
+            findings.extend(self._check_logging(config))
 
             logger.info(
-                "Scan complete — %d finding(s) detected", len(self.findings)
+                "Scan complete — %d finding(s) detected", len(findings)
             )
-            return list(self.findings)
+            return findings
 
-        def _check_encryption(self, config: dict[str, Any]) -> None:
+        def _check_encryption(self, config: dict[str, Any]) -> list[Finding]:
             """Check encryption configuration."""
+            findings: list[Finding] = []
             if not config.get("encryption_enabled", False):
-                self.findings.append(Finding(
-                    rule_id="{rule_prefix}-001",
+                findings.append(Finding(
+                    id="{rule_prefix}-001",
                     title="Encryption not enabled",
                     severity=Severity.HIGH,
-                    resource=config.get("resource_id", "unknown"),
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
                     description="Resource does not have encryption enabled at rest.",
-                    remediation="Enable encryption using AWS KMS or service-default keys.",
+                    recommendation="Enable encryption using AWS KMS or service-default keys.",
                 ))
+            return findings
 
-        def _check_public_access(self, config: dict[str, Any]) -> None:
+        def _check_public_access(self, config: dict[str, Any]) -> list[Finding]:
             """Check public access configuration."""
+            findings: list[Finding] = []
             if config.get("publicly_accessible", False):
-                self.findings.append(Finding(
-                    rule_id="{rule_prefix}-002",
+                findings.append(Finding(
+                    id="{rule_prefix}-002",
                     title="Resource is publicly accessible",
                     severity=Severity.CRITICAL,
-                    resource=config.get("resource_id", "unknown"),
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
                     description="Resource is configured for public access.",
-                    remediation="Disable public access and restrict to VPC.",
+                    recommendation="Disable public access and restrict to VPC.",
                 ))
+            return findings
 
-        def _check_logging(self, config: dict[str, Any]) -> None:
+        def _check_logging(self, config: dict[str, Any]) -> list[Finding]:
             """Check logging / monitoring configuration."""
+            findings: list[Finding] = []
             if not config.get("logging_enabled", False):
-                self.findings.append(Finding(
-                    rule_id="{rule_prefix}-003",
+                findings.append(Finding(
+                    id="{rule_prefix}-003",
                     title="Logging not enabled",
                     severity=Severity.MEDIUM,
-                    resource=config.get("resource_id", "unknown"),
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
                     description="Audit logging is not enabled for this resource.",
-                    remediation="Enable audit logging for security monitoring.",
+                    recommendation="Enable audit logging for security monitoring.",
                 ))
+            return findings
 ''')
 
 _PYTHON_TEST_TEMPLATE = textwrap.dedent('''\
@@ -154,6 +131,8 @@ _PYTHON_TEST_TEMPLATE = textwrap.dedent('''\
     from __future__ import annotations
 
     import pytest
+
+    from security_scanner.models import Finding
 
 
     class Test{class_name}:
@@ -171,7 +150,7 @@ _PYTHON_TEST_TEMPLATE = textwrap.dedent('''\
                 "logging_enabled": True,
             }}
             findings = scanner.scan(config)
-            assert any(f.rule_id.endswith("-001") for f in findings)
+            assert any(f.id.endswith("-001") for f in findings)
 
         def test_scan_detects_public_access(self) -> None:
             """Public access check should flag exposed resources."""
@@ -185,7 +164,7 @@ _PYTHON_TEST_TEMPLATE = textwrap.dedent('''\
                 "logging_enabled": True,
             }}
             findings = scanner.scan(config)
-            assert any(f.rule_id.endswith("-002") for f in findings)
+            assert any(f.id.endswith("-002") for f in findings)
 
         def test_scan_clean_config(self) -> None:
             """A fully-compliant config should produce no findings."""
@@ -213,7 +192,7 @@ _PYTHON_TEST_TEMPLATE = textwrap.dedent('''\
                 "logging_enabled": False,
             }}
             findings = scanner.scan(config)
-            assert any(f.rule_id.endswith("-003") for f in findings)
+            assert any(f.id.endswith("-003") for f in findings)
 ''')
 
 _COMPLIANCE_CHECK_TEMPLATE = textwrap.dedent('''\
@@ -560,7 +539,8 @@ _DETECTION_TEST_TEMPLATE = textwrap.dedent('''\
                 "is_console_login": True,
             }}]
             alerts = detector.analyse(events)
-            assert any("external IP" in a.title.lower() or "console" in a.title.lower() for a in alerts)
+            titles = [a.title.lower() for a in alerts]
+            assert any("external ip" in t or "console" in t for t in titles)
 ''')
 
 _MARKDOWN_TEMPLATE = textwrap.dedent('''\
@@ -926,12 +906,15 @@ class SecurityLabAgent:
             if cleaned.startswith("```"):
                 lines = cleaned.splitlines()
                 # Remove first and last lines (code fences)
-                json_lines = [l for l in lines if not l.strip().startswith("```")]
+                json_lines = [line for line in lines if not line.strip().startswith("```")]
                 cleaned = "\n".join(json_lines)
 
             task = json.loads(cleaned)
             # Validate required keys
-            required = {"id", "title", "description", "category", "files_to_create", "commit_message"}
+            required = {
+                "id", "title", "description",
+                "category", "files_to_create", "commit_message",
+            }
             if required.issubset(task.keys()):
                 logger.info("AI suggested task: %s", task["title"])
                 return task
@@ -969,8 +952,25 @@ class SecurityLabAgent:
             logger.warning("Task has no files to create")
             return False
 
-        created: list[str] = []
+        # Normalize Python file paths so they live under src/ or tests/
+        normalized_files: list[str] = []
         for rel_path in files:
+            normalized = rel_path
+            if rel_path.endswith(".py") and not (
+                rel_path.startswith("src/") or rel_path.startswith("tests/")
+            ):
+                if "test" in rel_path.lower():
+                    normalized = f"tests/{rel_path}"
+                else:
+                    normalized = f"src/{rel_path}"
+                logger.info("Normalized %s -> %s", rel_path, normalized)
+            normalized_files.append(normalized)
+
+        # Update task dict so templates see normalized paths
+        task["files_to_create"] = normalized_files
+
+        created: list[str] = []
+        for rel_path in normalized_files:
             try:
                 full = self._repo / rel_path
                 full.parent.mkdir(parents=True, exist_ok=True)
@@ -987,7 +987,7 @@ class SecurityLabAgent:
             except Exception:
                 logger.exception("Failed to create %s", rel_path)
 
-        logger.info("Created %d/%d files", len(created), len(files))
+        logger.info("Created %d/%d files", len(created), len(normalized_files))
         return len(created) > 0
 
     def _render_template(self, rel_path: str, task: dict[str, Any]) -> str:
@@ -1006,10 +1006,11 @@ class SecurityLabAgent:
         task_id = task.get("id", "task")
 
         # Derive class name from title
+        _skip = {"add", "implement", "create", "write", "a", "an", "the", "for", "with"}
         class_name = "".join(
             word.capitalize()
             for word in title.replace("-", " ").replace("_", " ").split()
-            if word.lower() not in {"add", "implement", "create", "write", "a", "an", "the", "for", "with"}
+            if word.lower() not in _skip
         )
         if not class_name:
             class_name = "SecurityModule"
@@ -1022,6 +1023,16 @@ class SecurityLabAgent:
         if rel_path.startswith("src/") and rel_path.endswith(".py"):
             module_path = rel_path[4:].replace("/", ".").removesuffix(".py")
 
+        # For test files, try to infer module path from the corresponding source file
+        if not module_path and "test" in rel_path.lower() and rel_path.endswith(".py"):
+            test_name = Path(rel_path).stem.replace("test_", "")
+            for other in task.get("files_to_create", []):
+                if other.startswith("src/") and other.endswith(".py"):
+                    other_name = Path(other).stem
+                    if test_name == other_name or other_name in test_name:
+                        module_path = other[4:].replace("/", ".").removesuffix(".py")
+                        break
+
         context = {
             "title": title,
             "title_lower": title.lower(),
@@ -1030,7 +1041,7 @@ class SecurityLabAgent:
             "rule_prefix": rule_prefix,
             "module_path": module_path,
             "module_name": task_id,
-            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "date": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),  # noqa: UP017
         }
 
         # Select template based on path and category
@@ -1103,13 +1114,19 @@ class SecurityLabAgent:
         """
         logger.info("Running validation …")
         passed = True
+        import sys
 
         # Ruff check
-        passed &= self._run_tool(["python", "-m", "ruff", "check", ".", "--fix"], "ruff")
+        passed &= self._run_tool(
+            [sys.executable, "-m", "ruff", "check", ".", "--fix"], "ruff"
+        )
 
         # Pytest (only unit tests, fast)
         passed &= self._run_tool(
-            ["python", "-m", "pytest", "tests/", "-x", "-q", "--tb=short", "--no-header"],
+            [
+                sys.executable, "-m", "pytest", "tests/",
+                "-x", "-q", "--tb=short", "--no-header",
+            ],
             "pytest",
         )
 
@@ -1126,7 +1143,7 @@ class SecurityLabAgent:
             *True* if the tool exits successfully.
         """
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 cmd,
                 cwd=self._repo,
                 capture_output=True,
@@ -1146,11 +1163,11 @@ class SecurityLabAgent:
                 )
                 return False
         except FileNotFoundError:
-            logger.warning("Tool '%s' not found — skipping", name)
-            return True  # don't block on missing tools
+            logger.warning("Tool '%s' not found — treating as failure", name)
+            return False
         except subprocess.TimeoutExpired:
-            logger.warning("Tool '%s' timed out — skipping", name)
-            return True
+            logger.warning("Tool '%s' timed out — treating as failure", name)
+            return False
 
     # ------------------------------------------------------------------
     # Step 5: Commit
@@ -1181,3 +1198,24 @@ class SecurityLabAgent:
         except Exception:
             logger.exception("Commit failed")
             return None
+
+
+# ------------------------------------------------------------------------------
+# Entry point
+# ------------------------------------------------------------------------------
+
+
+def main() -> int:
+    """Run a single improvement cycle from the command line.
+
+    Returns:
+        0 on success, 1 on failure.
+    """
+    config = AgentConfig.from_env()
+    agent = SecurityLabAgent(config)
+    success = agent.run()
+    return 0 if success else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
