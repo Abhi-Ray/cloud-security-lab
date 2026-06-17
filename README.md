@@ -1,7 +1,7 @@
 # ☁️ Cloud Security Autonomous Lab
 
-[![CI](https://github.com/USERNAME/cloud-security-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/cloud-security-lab/actions/workflows/ci.yml)
-[![Terraform](https://github.com/USERNAME/cloud-security-lab/actions/workflows/terraform-validate.yml/badge.svg)](https://github.com/USERNAME/cloud-security-lab/actions/workflows/terraform-validate.yml)
+[![CI](https://github.com/Abhi-Ray/cloud-security-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Abhi-Ray/cloud-security-lab/actions/workflows/ci.yml)
+[![Terraform](https://github.com/Abhi-Ray/cloud-security-lab/actions/workflows/terraform-validate.yml/badge.svg)](https://github.com/Abhi-Ray/cloud-security-lab/actions/workflows/terraform-validate.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CIS Benchmark](https://img.shields.io/badge/CIS-AWS%20Foundations%20v2.0-orange.svg)](https://www.cisecurity.org/benchmark/amazon_web_services)
@@ -27,7 +27,7 @@ No cloud credentials required — all tools work against configurable mock data 
 ### Install
 
 ```bash
-git clone https://github.com/USERNAME/cloud-security-lab.git
+git clone https://github.com/Abhi-Ray/cloud-security-lab.git
 cd cloud-security-lab
 pip install -e ".[dev]"
 ```
