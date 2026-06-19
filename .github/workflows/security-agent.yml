@@ -16,7 +16,7 @@ on:
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: write
       pull-requests: write
@@ -24,16 +24,16 @@ jobs:
     steps:
       - name: Random delay to avoid detection patterns
         run: |
-          DELAY=$((RANDOM % 1800))
+          DELAY=$((RANDOM % 300))
           echo "Sleeping for ${DELAY} seconds to randomize execution time"
           sleep $DELAY
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
