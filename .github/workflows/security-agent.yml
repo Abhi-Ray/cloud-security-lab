@@ -99,7 +99,7 @@ jobs:
             - Run ID: ${{ github.run_id }}
             - Branch: \`$BRANCH\`
             - Model: ${{ secrets.OPENROUTER_MODEL }}" \
-            --label "auto-generated")
+          )
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Created PR: $PR_URL"
         env:
