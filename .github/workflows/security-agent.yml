@@ -103,7 +103,7 @@ jobs:
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Created PR: $PR_URL"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AGENT_PAT }}
 
       - name: Enable Auto-Merge
         if: steps.pr.outputs.pr_url != ''
@@ -112,4 +112,4 @@ jobs:
           gh pr merge "$PR_URL" --auto --squash
           echo "Auto-merge enabled for $PR_URL"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AGENT_PAT }}
