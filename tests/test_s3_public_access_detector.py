@@ -1,6 +1,8 @@
-"""Tests for Add S3 Public Access Detector."""
+"""Tests for S3 Public Access Detector."""
 
 from __future__ import annotations
+
+from detectors.s3_public_access_detector import S3PublicAccessDetector
 
 
 class TestS3PublicAccessDetector:
@@ -8,8 +10,6 @@ class TestS3PublicAccessDetector:
 
     def test_scan_detects_missing_encryption(self) -> None:
         """Encryption check should flag unencrypted resources."""
-        from detectors.s3_public_access_detector import S3PublicAccessDetector
-
         scanner = S3PublicAccessDetector()
         config = {
             "resource_id": "test-resource-001",
@@ -22,8 +22,6 @@ class TestS3PublicAccessDetector:
 
     def test_scan_detects_public_access(self) -> None:
         """Public access check should flag exposed resources."""
-        from detectors.s3_public_access_detector import S3PublicAccessDetector
-
         scanner = S3PublicAccessDetector()
         config = {
             "resource_id": "test-resource-002",
@@ -36,8 +34,6 @@ class TestS3PublicAccessDetector:
 
     def test_scan_clean_config(self) -> None:
         """A fully-compliant config should produce no findings."""
-        from detectors.s3_public_access_detector import S3PublicAccessDetector
-
         scanner = S3PublicAccessDetector()
         config = {
             "resource_id": "test-resource-003",
@@ -50,8 +46,6 @@ class TestS3PublicAccessDetector:
 
     def test_scan_detects_missing_logging(self) -> None:
         """Logging check should flag resources without audit logs."""
-        from detectors.s3_public_access_detector import S3PublicAccessDetector
-
         scanner = S3PublicAccessDetector()
         config = {
             "resource_id": "test-resource-004",
