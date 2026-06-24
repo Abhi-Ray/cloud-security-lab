@@ -858,7 +858,11 @@ class SecurityLabAgent:
         if self.config.is_configured():
             task = self._try_ai_planning(state)
             if task is not None:
-                return task
+                # Skip if all target files already exist (avoid duplicates)
+                target_files = set(task.get("files_to_create", []))
+                if not target_files or not existing.intersection(target_files):
+                    return task
+                logger.info("AI task targets existing files — skipping to avoid duplicate")
 
         # Fallback: pick from catalogue, preferring tasks whose files
         # don't already exist
@@ -1011,11 +1015,14 @@ class SecurityLabAgent:
         category = task.get("category", "")
         task_id = task.get("id", "task")
 
-        # Derive class name from title
+        # Derive class name from title (sanitized to valid Python identifier)
         _skip = {"add", "implement", "create", "write", "a", "an", "the", "for", "with"}
+        import re
+
+        _clean = re.sub(r"[^a-zA-Z0-9 _-]", "", title)
         class_name = "".join(
             word.capitalize()
-            for word in title.replace("-", " ").replace("_", " ").split()
+            for word in _clean.replace("-", " ").replace("_", " ").split()
             if word.lower() not in _skip
         )
         if not class_name:
@@ -1062,7 +1069,10 @@ class SecurityLabAgent:
         if rel_path.endswith(".md"):
             return _MARKDOWN_TEMPLATE.format(**context)
 
-        # Python files
+        # Python files — never overwrite an existing __init__.py with template code
+        if rel_path.endswith("__init__.py") and (self._repo / rel_path).exists():
+            return (self._repo / rel_path).read_text(encoding="utf-8")
+
         if "test" in rel_path.lower():
             if category == "scanner":
                 return _PYTHON_TEST_TEMPLATE.format(**context)
