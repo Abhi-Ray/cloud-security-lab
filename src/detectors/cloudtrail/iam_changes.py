@@ -23,30 +23,35 @@ from detectors.models import (
 # Dangerous policy / permission patterns
 # ---------------------------------------------------------------------------
 
-_ADMIN_POLICY_ARNS: frozenset[str] = frozenset({
-    "arn:aws:iam::aws:policy/AdministratorAccess",
-    "arn:aws:iam::aws:policy/IAMFullAccess",
-    "arn:aws:iam::aws:policy/PowerUserAccess",
-})
+_ADMIN_POLICY_ARNS: frozenset[str] = frozenset(
+    {
+        "arn:aws:iam::aws:policy/AdministratorAccess",
+        "arn:aws:iam::aws:policy/IAMFullAccess",
+        "arn:aws:iam::aws:policy/PowerUserAccess",
+    }
+)
 
-_DANGEROUS_ACTIONS: frozenset[str] = frozenset({
-    "*",
-    "iam:*",
-    "sts:AssumeRole",
-    "iam:CreateUser",
-    "iam:AttachUserPolicy",
-    "iam:PutUserPolicy",
-    "iam:CreateAccessKey",
-    "iam:CreateLoginProfile",
-    "lambda:*",
-    "s3:*",
-    "ec2:*",
-})
+_DANGEROUS_ACTIONS: frozenset[str] = frozenset(
+    {
+        "*",
+        "iam:*",
+        "sts:AssumeRole",
+        "iam:CreateUser",
+        "iam:AttachUserPolicy",
+        "iam:PutUserPolicy",
+        "iam:CreateAccessKey",
+        "iam:CreateLoginProfile",
+        "lambda:*",
+        "s3:*",
+        "ec2:*",
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # detect_admin_policy_attachment
 # ---------------------------------------------------------------------------
+
 
 def detect_admin_policy_attachment(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect attachment of admin-level managed policies.
@@ -77,10 +82,7 @@ def detect_admin_policy_attachment(event: dict[str, Any]) -> DetectionMatch | No
     actor = _get_actor(event)
     target = params.get("userName") or params.get("groupName") or params.get("roleName", "unknown")
 
-    details = (
-        f"Admin-level policy '{policy_arn}' attached to {target} "
-        f"by {actor} via {event_name}."
-    )
+    details = f"Admin-level policy '{policy_arn}' attached to {target} by {actor} via {event_name}."
 
     return DetectionMatch(
         rule=ADMIN_POLICY_ATTACHMENT_RULE,
@@ -114,6 +116,7 @@ ADMIN_POLICY_ATTACHMENT_RULE = DetectionRule(
 # ---------------------------------------------------------------------------
 # detect_new_user_creation
 # ---------------------------------------------------------------------------
+
 
 def detect_new_user_creation(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect creation of new IAM users.
@@ -167,6 +170,7 @@ NEW_USER_CREATION_RULE = DetectionRule(
 # ---------------------------------------------------------------------------
 # detect_policy_modification
 # ---------------------------------------------------------------------------
+
 
 def detect_policy_modification(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect creation or modification of policies with dangerous permissions.
@@ -241,14 +245,11 @@ POLICY_MODIFICATION_RULE = DetectionRule(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_actor(event: dict[str, Any]) -> str:
     """Extract a human-readable actor identifier from a CloudTrail event."""
     identity = event.get("userIdentity", {})
-    return (
-        identity.get("arn")
-        or identity.get("userName")
-        or identity.get("type", "unknown")
-    )
+    return identity.get("arn") or identity.get("userName") or identity.get("type", "unknown")
 
 
 def _extract_dangerous_actions(
@@ -265,10 +266,7 @@ def _extract_dangerous_actions(
     found: set[str] = set()
 
     # Normalise to string for pattern matching.
-    if isinstance(policy_doc, dict):
-        doc_str = json.dumps(policy_doc)
-    else:
-        doc_str = str(policy_doc)
+    doc_str = json.dumps(policy_doc) if isinstance(policy_doc, dict) else str(policy_doc)
 
     for action in _DANGEROUS_ACTIONS:
         # Check for the action surrounded by quotes (as it would appear in JSON).

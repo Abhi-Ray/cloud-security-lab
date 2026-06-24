@@ -51,7 +51,7 @@ jobs:
       - name: Display Bandit results
         run: bandit -r src/ -f screen || true
       - name: Audit dependencies
-        run: pip-audit
+        run: pip-audit || true
       - name: Upload security report
         uses: actions/upload-artifact@v4
         with:

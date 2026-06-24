@@ -16,8 +16,8 @@ __all__ = [
 ]
 
 # Lazy imports to avoid heavy dependencies at package level
+from automation.ai_agent import SecurityLabAgent
 from automation.config import AgentConfig
 from automation.github_manager import GitManager
 from automation.openrouter_client import OpenRouterClient
-from automation.ai_agent import SecurityLabAgent
 from automation.task_generator import TaskGenerator

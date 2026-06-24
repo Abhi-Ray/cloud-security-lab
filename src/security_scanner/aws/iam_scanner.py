@@ -218,9 +218,7 @@ class IAMScanner(BaseScanner):
                 if age > _KEY_ROTATION_THRESHOLD:
                     findings.append(
                         self._create_finding(
-                            title=(
-                                f"Access key for '{username}' has not been rotated"
-                            ),
+                            title=(f"Access key for '{username}' has not been rotated"),
                             severity=Severity.MEDIUM,
                             resource_type="IAM Access Key",
                             resource_id=f"{username}/key-{idx + 1}",
@@ -307,9 +305,7 @@ class IAMScanner(BaseScanner):
                     if ":" in action and action.split(":")[1] == "*":
                         findings.append(
                             self._create_finding(
-                                title=(
-                                    f"IAM policy '{name}' grants broad service access"
-                                ),
+                                title=(f"IAM policy '{name}' grants broad service access"),
                                 severity=Severity.HIGH,
                                 resource_type="IAM Policy",
                                 resource_id=name,
@@ -317,9 +313,7 @@ class IAMScanner(BaseScanner):
                                     f"Policy '{name}' grants all actions for service "
                                     f"'{action.split(':')[0]}' on all resources."
                                 ),
-                                recommendation=(
-                                    "Restrict both the actions and resource ARNs."
-                                ),
+                                recommendation=("Restrict both the actions and resource ARNs."),
                                 details={"actions": actions, "resources": resources},
                             )
                         )
@@ -350,9 +344,7 @@ class IAMScanner(BaseScanner):
 
         min_length = policy.get("min_length", 0)
         if min_length < _MIN_PASSWORD_LENGTH:
-            issues.append(
-                f"Minimum length is {min_length} (recommended: {_MIN_PASSWORD_LENGTH})"
-            )
+            issues.append(f"Minimum length is {min_length} (recommended: {_MIN_PASSWORD_LENGTH})")
 
         for flag, required in _REQUIRED_PASSWORD_POLICY_FLAGS.items():
             if required and not policy.get(flag, False):

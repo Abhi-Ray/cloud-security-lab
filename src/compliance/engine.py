@@ -7,7 +7,7 @@ frameworks and produces structured compliance reports.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from compliance.cis_aws import ALL_CIS_AWS_CHECKS
@@ -18,7 +18,6 @@ from compliance.models import (
     ComplianceReport,
     Framework,
 )
-
 
 __all__ = ["ComplianceEngine"]
 
@@ -100,13 +99,11 @@ class ComplianceEngine:
         """
         checks = self._registry.get(framework)
         if not checks:
-            raise ValueError(
-                f"No checks registered for framework: {framework.value}"
-            )
+            raise ValueError(f"No checks registered for framework: {framework.value}")
 
         report = ComplianceReport(
             framework=framework,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         for check in checks:
@@ -156,7 +153,7 @@ class ComplianceEngine:
         """
         try:
             return check.check_function(config)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("Check %s raised an exception", check.id)
             return CheckResult(
                 check=check,

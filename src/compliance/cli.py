@@ -20,7 +20,6 @@ from rich.table import Table
 from compliance.engine import ComplianceEngine
 from compliance.models import CheckStatus, ComplianceReport, Framework, Severity
 
-
 __all__ = ["main"]
 
 console = Console()
@@ -308,9 +307,7 @@ def _print_report(report: ComplianceReport) -> None:
 
     for result in report.results:
         status_str = _STATUS_STYLE.get(result.status, str(result.status.value))
-        severity_str = _SEVERITY_STYLE.get(
-            result.check.severity, str(result.check.severity.value)
-        )
+        severity_str = _SEVERITY_STYLE.get(result.check.severity, str(result.check.severity.value))
 
         details = result.details
         if result.recommendation and result.status == CheckStatus.FAIL:

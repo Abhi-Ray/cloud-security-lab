@@ -97,9 +97,7 @@ class S3Scanner(BaseScanner):
     # Individual checks
     # ------------------------------------------------------------------
 
-    def _check_public_access_block(
-        self, bucket_name: str, bucket: dict[str, Any]
-    ) -> list[Finding]:
+    def _check_public_access_block(self, bucket_name: str, bucket: dict[str, Any]) -> list[Finding]:
         """Verify that all four S3 public access block settings are enabled."""
         findings: list[Finding] = []
         pab: dict[str, bool] = bucket.get("public_access_block", {})
@@ -136,9 +134,7 @@ class S3Scanner(BaseScanner):
 
         return findings
 
-    def _check_encryption(
-        self, bucket_name: str, bucket: dict[str, Any]
-    ) -> list[Finding]:
+    def _check_encryption(self, bucket_name: str, bucket: dict[str, Any]) -> list[Finding]:
         """Check that server-side encryption is enabled."""
         findings: list[Finding] = []
         encryption: dict[str, Any] = bucket.get("encryption", {})
@@ -167,9 +163,7 @@ class S3Scanner(BaseScanner):
 
         return findings
 
-    def _check_versioning(
-        self, bucket_name: str, bucket: dict[str, Any]
-    ) -> list[Finding]:
+    def _check_versioning(self, bucket_name: str, bucket: dict[str, Any]) -> list[Finding]:
         """Check that versioning is enabled for data protection."""
         findings: list[Finding] = []
 
@@ -195,9 +189,7 @@ class S3Scanner(BaseScanner):
 
         return findings
 
-    def _check_logging(
-        self, bucket_name: str, bucket: dict[str, Any]
-    ) -> list[Finding]:
+    def _check_logging(self, bucket_name: str, bucket: dict[str, Any]) -> list[Finding]:
         """Check that server access logging is enabled."""
         findings: list[Finding] = []
 
@@ -223,9 +215,7 @@ class S3Scanner(BaseScanner):
 
         return findings
 
-    def _check_bucket_policy(
-        self, bucket_name: str, bucket: dict[str, Any]
-    ) -> list[Finding]:
+    def _check_bucket_policy(self, bucket_name: str, bucket: dict[str, Any]) -> list[Finding]:
         """Check whether the bucket policy allows public access."""
         findings: list[Finding] = []
         policy: dict[str, Any] | None = bucket.get("policy")

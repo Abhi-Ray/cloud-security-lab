@@ -1,6 +1,8 @@
-"""Auto-generated Add S3 Public Access Block Detector with Terraform/CloudFormation Support.
+"""S3 Public Access Block detector for Terraform/CloudFormation/CDK sources.
 
-Implement a new detector module that identifies S3 buckets missing Public Access Block configuration across Terraform (.tf), CloudFormation (.yaml/.json), and AWS CDK (TypeScript/Python) source files. Includes unit tests covering positive/negative cases for each IaC format and integration test fixtures.
+Identifies S3 buckets missing Public Access Block configuration across
+Terraform (.tf), CloudFormation (.yaml/.json), and AWS CDK
+(TypeScript/Python) source files.
 """
 
 from __future__ import annotations
@@ -10,18 +12,20 @@ from typing import Any
 
 from security_scanner.models import Finding, Severity
 
-__all__ = ["S3PublicAccessBlockDetectorTerraform/cloudformationSupport"]
+__all__ = ["S3PublicAccessBlockDetector"]
 
 logger = logging.getLogger(__name__)
 
 
-class S3PublicAccessBlockDetectorTerraform/cloudformationSupport:
-    """Scanner for Add S3 Public Access Block Detector with Terraform/CloudFormation Support.
+class S3PublicAccessBlockDetector:
+    """Scanner for S3 Public Access Block configuration.
 
-    Implement a new detector module that identifies S3 buckets missing Public Access Block configuration across Terraform (.tf), CloudFormation (.yaml/.json), and AWS CDK (TypeScript/Python) source files. Includes unit tests covering positive/negative cases for each IaC format and integration test fixtures.
+    Detects S3 buckets missing Public Access Block configuration across
+    Terraform (.tf), CloudFormation (.yaml/.json), and AWS CDK
+    (TypeScript/Python) source files.
     """
 
-    name: str = "Add S3 Public Access Block Detector with Terraform/CloudFormation Support"
+    name: str = "S3 Public Access Block Detector"
 
     def scan(self, config: dict[str, Any]) -> list[Finding]:
         """Run security checks against the provided configuration.
@@ -40,52 +44,56 @@ class S3PublicAccessBlockDetectorTerraform/cloudformationSupport:
         findings.extend(self._check_public_access(config))
         findings.extend(self._check_logging(config))
 
-        logger.info(
-            "Scan complete — %d finding(s) detected", len(findings)
-        )
+        logger.info("Scan complete — %d finding(s) detected", len(findings))
         return findings
 
     def _check_encryption(self, config: dict[str, Any]) -> list[Finding]:
         """Check encryption configuration."""
         findings: list[Finding] = []
         if not config.get("encryption_enabled", False):
-            findings.append(Finding(
-                id="DET001-001",
-                title="Encryption not enabled",
-                severity=Severity.HIGH,
-                resource_type="Cloud Resource",
-                resource_id=config.get("resource_id", "unknown"),
-                description="Resource does not have encryption enabled at rest.",
-                recommendation="Enable encryption using AWS KMS or service-default keys.",
-            ))
+            findings.append(
+                Finding(
+                    id="DET001-001",
+                    title="Encryption not enabled",
+                    severity=Severity.HIGH,
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
+                    description="Resource does not have encryption enabled at rest.",
+                    recommendation="Enable encryption using AWS KMS or service-default keys.",
+                )
+            )
         return findings
 
     def _check_public_access(self, config: dict[str, Any]) -> list[Finding]:
         """Check public access configuration."""
         findings: list[Finding] = []
         if config.get("publicly_accessible", False):
-            findings.append(Finding(
-                id="DET001-002",
-                title="Resource is publicly accessible",
-                severity=Severity.CRITICAL,
-                resource_type="Cloud Resource",
-                resource_id=config.get("resource_id", "unknown"),
-                description="Resource is configured for public access.",
-                recommendation="Disable public access and restrict to VPC.",
-            ))
+            findings.append(
+                Finding(
+                    id="DET001-002",
+                    title="Resource is publicly accessible",
+                    severity=Severity.CRITICAL,
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
+                    description="Resource is configured for public access.",
+                    recommendation="Disable public access and restrict to VPC.",
+                )
+            )
         return findings
 
     def _check_logging(self, config: dict[str, Any]) -> list[Finding]:
         """Check logging / monitoring configuration."""
         findings: list[Finding] = []
         if not config.get("logging_enabled", False):
-            findings.append(Finding(
-                id="DET001-003",
-                title="Logging not enabled",
-                severity=Severity.MEDIUM,
-                resource_type="Cloud Resource",
-                resource_id=config.get("resource_id", "unknown"),
-                description="Audit logging is not enabled for this resource.",
-                recommendation="Enable audit logging for security monitoring.",
-            ))
+            findings.append(
+                Finding(
+                    id="DET001-003",
+                    title="Logging not enabled",
+                    severity=Severity.MEDIUM,
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
+                    description="Audit logging is not enabled for this resource.",
+                    recommendation="Enable audit logging for security monitoring.",
+                )
+            )
         return findings

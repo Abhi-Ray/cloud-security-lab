@@ -40,7 +40,11 @@ dependencies = [
     "rich>=13.0",
     "click>=8.0",
     "pyyaml>=6.0",
-    "jinja2>=3.0",
+    "jinja2>=3.1.6",
+    # Pinned transitive deps to clear known CVEs reported by pip-audit.
+    "certifi>=2024.7.4",
+    "idna>=3.7",
+    "requests>=2.32.4",
 ]
 
 [project.optional-dependencies]
@@ -92,6 +96,14 @@ select = [
 ignore = [
     "S101",  # allow assert in tests
     "T201",  # allow print (CLI tool)
+    "RUF001",  # ambiguous unicode in strings (intentional emojis)
+    "RUF002",  # ambiguous unicode in docstrings (intentional en-dashes)
+    "RUF003",  # ambiguous unicode in comments (intentional en-dashes)
+    "N818",  # exception naming (public API names use Exceeded/Configured)
+    "DTZ011",  # datetime.date.today() (used for daily quota tracking, not tz-sensitive)
+    "S603",  # subprocess calls (git operations, trusted input)
+    "SIM102",  # nested-if simplification (readability)
+    "SIM108",  # ternary simplification (readability)
 ]
 
 [tool.ruff.lint.per-file-ignores]

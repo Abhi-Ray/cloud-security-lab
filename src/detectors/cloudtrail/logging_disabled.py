@@ -21,10 +21,10 @@ from detectors.models import (
     RuleSeverity,
 )
 
-
 # ---------------------------------------------------------------------------
 # detect_cloudtrail_stopped
 # ---------------------------------------------------------------------------
+
 
 def detect_cloudtrail_stopped(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect CloudTrail ``StopLogging`` API calls.
@@ -80,6 +80,7 @@ CLOUDTRAIL_STOPPED_RULE = DetectionRule(
 # detect_cloudtrail_deleted
 # ---------------------------------------------------------------------------
 
+
 def detect_cloudtrail_deleted(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect CloudTrail ``DeleteTrail`` API calls.
 
@@ -132,6 +133,7 @@ CLOUDTRAIL_DELETED_RULE = DetectionRule(
 # ---------------------------------------------------------------------------
 # detect_config_stopped
 # ---------------------------------------------------------------------------
+
 
 def detect_config_stopped(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect AWS Config ``StopConfigurationRecorder`` API calls.
@@ -201,11 +203,8 @@ CONFIG_STOPPED_RULE = DetectionRule(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_actor(event: dict[str, Any]) -> str:
     """Extract a human-readable actor identifier from a CloudTrail event."""
     identity = event.get("userIdentity", {})
-    return (
-        identity.get("arn")
-        or identity.get("userName")
-        or identity.get("type", "unknown")
-    )
+    return identity.get("arn") or identity.get("userName") or identity.get("type", "unknown")

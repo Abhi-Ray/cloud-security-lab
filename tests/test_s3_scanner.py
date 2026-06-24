@@ -81,7 +81,8 @@ class TestS3Scanner:
         result = scanner.scan(insecure_s3_config)
         critical_findings = [f for f in result.findings if f.severity == Severity.CRITICAL]
         public_access_findings = [
-            f for f in critical_findings
+            f
+            for f in critical_findings
             if "public" in f.title.lower() and "access" in f.title.lower()
         ]
         assert len(public_access_findings) > 0, "Should detect disabled public access block"
@@ -89,33 +90,26 @@ class TestS3Scanner:
     def test_detects_no_encryption(self, scanner, insecure_s3_config):
         """Should detect missing encryption."""
         result = scanner.scan(insecure_s3_config)
-        encryption_findings = [
-            f for f in result.findings if "encrypt" in f.title.lower()
-        ]
+        encryption_findings = [f for f in result.findings if "encrypt" in f.title.lower()]
         assert len(encryption_findings) > 0, "Should detect missing encryption"
 
     def test_detects_no_versioning(self, scanner, insecure_s3_config):
         """Should detect disabled versioning."""
         result = scanner.scan(insecure_s3_config)
-        versioning_findings = [
-            f for f in result.findings if "version" in f.title.lower()
-        ]
+        versioning_findings = [f for f in result.findings if "version" in f.title.lower()]
         assert len(versioning_findings) > 0, "Should detect disabled versioning"
 
     def test_detects_no_logging(self, scanner, insecure_s3_config):
         """Should detect disabled access logging."""
         result = scanner.scan(insecure_s3_config)
-        logging_findings = [
-            f for f in result.findings if "log" in f.title.lower()
-        ]
+        logging_findings = [f for f in result.findings if "log" in f.title.lower()]
         assert len(logging_findings) > 0, "Should detect disabled access logging"
 
     def test_detects_public_bucket_policy(self, scanner, insecure_s3_config):
         """Should detect bucket policy with Principal: *."""
         result = scanner.scan(insecure_s3_config)
         policy_findings = [
-            f for f in result.findings
-            if "policy" in f.title.lower() or "public" in f.title.lower()
+            f for f in result.findings if "policy" in f.title.lower() or "public" in f.title.lower()
         ]
         assert len(policy_findings) > 0, "Should detect public bucket policy"
 
@@ -123,8 +117,7 @@ class TestS3Scanner:
         """Secure S3 config should produce no critical/high findings."""
         result = scanner.scan(secure_s3_config)
         serious_findings = [
-            f for f in result.findings
-            if f.severity in (Severity.CRITICAL, Severity.HIGH)
+            f for f in result.findings if f.severity in (Severity.CRITICAL, Severity.HIGH)
         ]
         assert len(serious_findings) == 0, (
             f"Secure config should have no critical/high findings, got: "

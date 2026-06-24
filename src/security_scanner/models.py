@@ -11,16 +11,15 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-
 __all__ = [
-    "Severity",
     "Finding",
-    "ScanResult",
     "ScanConfig",
+    "ScanResult",
+    "Severity",
 ]
 
 
@@ -124,7 +123,7 @@ class ScanResult:
     """
 
     scanner_name: str
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     findings: list[Finding] = field(default_factory=list)
     scan_duration_ms: float = 0.0
 

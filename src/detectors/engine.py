@@ -93,8 +93,7 @@ class DetectionEngine:
                     matches.append(result)
             except Exception:
                 logger.exception(
-                    "Rule %s (%s) raised an exception while processing "
-                    "event '%s'",
+                    "Rule %s (%s) raised an exception while processing event '%s'",
                     rule.id,
                     rule.name,
                     event.get("eventName", "<unknown>"),

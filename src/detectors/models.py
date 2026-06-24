@@ -9,8 +9,11 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Callable
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class RuleSeverity(enum.Enum):
@@ -115,6 +118,4 @@ class DetectionSummary:
     rules_evaluated: int
     events_processed: int
     matches: list[DetectionMatch] = field(default_factory=list)
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(tz=UTC).isoformat())

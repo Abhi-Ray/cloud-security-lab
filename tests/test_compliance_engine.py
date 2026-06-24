@@ -32,7 +32,11 @@ def secure_config():
                 {
                     "name": "ReadOnly",
                     "statements": [
-                        {"effect": "Allow", "action": "s3:GetObject", "resource": "arn:aws:s3:::my-bucket/*"}
+                        {
+                            "effect": "Allow",
+                            "action": "s3:GetObject",
+                            "resource": "arn:aws:s3:::my-bucket/*",
+                        }
                     ],
                 }
             ],
@@ -98,9 +102,7 @@ def insecure_config():
             "policies": [
                 {
                     "name": "SuperAdmin",
-                    "statements": [
-                        {"effect": "Allow", "action": "*", "resource": "*"}
-                    ],
+                    "statements": [{"effect": "Allow", "action": "*", "resource": "*"}],
                 }
             ],
             "password_policy": {
@@ -167,17 +169,17 @@ class TestComplianceEngine:
     def test_secure_config_high_score(self, engine, secure_config):
         """Secure configuration should score above 80%."""
         report = engine.run_assessment(secure_config, Framework.CIS_AWS)
+        failed = [r.check.title for r in report.results if r.status == CheckStatus.FAIL]
         assert report.score >= 80.0, (
-            f"Secure config should score >=80%, got {report.score}%. "
-            f"Failed checks: {[r.check.title for r in report.results if r.status == CheckStatus.FAIL]}"
+            f"Secure config should score >=80%, got {report.score}%. Failed checks: {failed}"
         )
 
     def test_insecure_config_low_score(self, engine, insecure_config):
         """Insecure configuration should score below 50%."""
         report = engine.run_assessment(insecure_config, Framework.CIS_AWS)
+        passed = [r.check.title for r in report.results if r.status == CheckStatus.PASS]
         assert report.score <= 50.0, (
-            f"Insecure config should score <=50%, got {report.score}%. "
-            f"Passed checks: {[r.check.title for r in report.results if r.status == CheckStatus.PASS]}"
+            f"Insecure config should score <=50%, got {report.score}%. Passed checks: {passed}"
         )
 
     def test_report_has_correct_structure(self, engine, secure_config):

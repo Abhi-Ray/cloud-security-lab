@@ -17,10 +17,10 @@ from detectors.models import (
     RuleSeverity,
 )
 
-
 # ---------------------------------------------------------------------------
 # detect_sg_ingress_modification
 # ---------------------------------------------------------------------------
+
 
 def detect_sg_ingress_modification(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect security group ingress rules that allow traffic from anywhere.
@@ -86,6 +86,7 @@ SG_INGRESS_MODIFICATION_RULE = DetectionRule(
 # detect_sg_deletion
 # ---------------------------------------------------------------------------
 
+
 def detect_sg_deletion(event: dict[str, Any]) -> DetectionMatch | None:
     """Detect deletion of security groups.
 
@@ -142,14 +143,11 @@ SG_DELETION_RULE = DetectionRule(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_actor(event: dict[str, Any]) -> str:
     """Extract a human-readable actor identifier from a CloudTrail event."""
     identity = event.get("userIdentity", {})
-    return (
-        identity.get("arn")
-        or identity.get("userName")
-        or identity.get("type", "unknown")
-    )
+    return identity.get("arn") or identity.get("userName") or identity.get("type", "unknown")
 
 
 def _find_open_cidrs(params: dict[str, Any]) -> list[str]:
