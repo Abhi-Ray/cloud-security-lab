@@ -64,12 +64,9 @@ class CloudTrailScanner(BaseScanner):
                     severity=Severity.INFO,
                     resource_type="CloudTrail",
                     resource_id="N/A",
-                    description=(
-                        "No CloudTrail configuration was provided for scanning."
-                    ),
+                    description=("No CloudTrail configuration was provided for scanning."),
                     recommendation=(
-                        "Supply CloudTrail data in the config under the "
-                        "'cloudtrail' key."
+                        "Supply CloudTrail data in the config under the 'cloudtrail' key."
                     ),
                 )
             ]
@@ -105,9 +102,7 @@ class CloudTrailScanner(BaseScanner):
     # Per-trail checks
     # ------------------------------------------------------------------
 
-    def _check_trail(
-        self, trail_name: str, trail: dict[str, Any]
-    ) -> list[Finding]:
+    def _check_trail(self, trail_name: str, trail: dict[str, Any]) -> list[Finding]:
         """Run all checks against a single trail."""
         findings: list[Finding] = []
 
@@ -199,8 +194,7 @@ class CloudTrailScanner(BaseScanner):
             findings.append(
                 self._create_finding(
                     title=(
-                        f"S3 bucket for trail '{trail_name}' does not have "
-                        "access logging enabled"
+                        f"S3 bucket for trail '{trail_name}' does not have access logging enabled"
                     ),
                     severity=Severity.MEDIUM,
                     resource_type="CloudTrail Trail",

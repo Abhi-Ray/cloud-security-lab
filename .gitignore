@@ -67,3 +67,6 @@ logs/
 # Security scan outputs
 reports/
 *.sarif
+
+# OpenRouter usage tracking (runtime artifact)
+.openrouter_usage.json

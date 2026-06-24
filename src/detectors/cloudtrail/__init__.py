@@ -7,7 +7,7 @@ CloudTrail detection rule.
 
 from __future__ import annotations
 
-from detectors.models import DetectionRule
+from typing import TYPE_CHECKING
 
 from detectors.cloudtrail.iam_changes import (
     ADMIN_POLICY_ATTACHMENT_RULE,
@@ -25,17 +25,20 @@ from detectors.cloudtrail.security_group_changes import (
     SG_INGRESS_MODIFICATION_RULE,
 )
 
+if TYPE_CHECKING:
+    from detectors.models import DetectionRule
+
 __all__ = [
-    "get_all_cloudtrail_rules",
     "ADMIN_POLICY_ATTACHMENT_RULE",
-    "NEW_USER_CREATION_RULE",
-    "POLICY_MODIFICATION_RULE",
     "CLOUDTRAIL_DELETED_RULE",
     "CLOUDTRAIL_STOPPED_RULE",
     "CONFIG_STOPPED_RULE",
+    "NEW_USER_CREATION_RULE",
+    "POLICY_MODIFICATION_RULE",
     "ROOT_CONSOLE_LOGIN_RULE",
     "SG_DELETION_RULE",
     "SG_INGRESS_MODIFICATION_RULE",
+    "get_all_cloudtrail_rules",
 ]
 
 

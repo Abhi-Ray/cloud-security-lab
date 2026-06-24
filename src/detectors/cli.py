@@ -19,12 +19,14 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import click
 
 from detectors.engine import DetectionEngine
-from detectors.models import DetectionMatch, DetectionSummary
+
+if TYPE_CHECKING:
+    from detectors.models import DetectionMatch, DetectionSummary
 
 # ---------------------------------------------------------------------------
 # Built-in demo CloudTrail events
@@ -235,7 +237,7 @@ def _print_match(match: DetectionMatch, index: int) -> None:
     click.echo()
     click.secho(f"  ┌─ Match #{index}", bold=True)
     click.echo(f"  │ Rule       : {match.rule.id} — {match.rule.name}")
-    click.echo(f"  │ Severity   : ", nl=False)
+    click.echo("  │ Severity   : ", nl=False)
     click.secho(sev, fg=colour, bold=True)
     click.echo(f"  │ MITRE      : {tactics}")
     click.echo(f"  │ Timestamp  : {match.timestamp}")
@@ -255,10 +257,10 @@ def _print_summary(summary: DetectionSummary) -> None:
     click.echo(f"  Events processed  : {summary.events_processed}")
 
     if summary.matches:
-        click.echo(f"  Matches found     : ", nl=False)
+        click.echo("  Matches found     : ", nl=False)
         click.secho(str(len(summary.matches)), fg="red", bold=True)
     else:
-        click.echo(f"  Matches found     : ", nl=False)
+        click.echo("  Matches found     : ", nl=False)
         click.secho("0", fg="green", bold=True)
 
     click.echo(f"  Generated at      : {summary.timestamp}")
@@ -284,6 +286,7 @@ def _print_summary(summary: DetectionSummary) -> None:
 # ---------------------------------------------------------------------------
 # Click CLI
 # ---------------------------------------------------------------------------
+
 
 @click.group()
 def main() -> None:

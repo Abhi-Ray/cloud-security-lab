@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from security_scanner.models import (
@@ -95,7 +95,7 @@ class BaseScanner(ABC):
 
         return ScanResult(
             scanner_name=self.name,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             findings=findings,
             scan_duration_ms=round(elapsed_ms, 2),
         )

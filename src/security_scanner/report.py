@@ -10,7 +10,7 @@ Provides :class:`SecurityReportGenerator` with three output modes:
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from security_scanner.models import Finding, ScanResult, Severity
@@ -57,8 +57,7 @@ class SecurityReportGenerator:
         lines.append("=" * width)
         lines.append("CLOUD SECURITY SCAN REPORT".center(width))
         lines.append(
-            f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}"
-            .center(width)
+            f"Generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}".center(width)
         )
         lines.append("=" * width)
         lines.append("")
@@ -116,7 +115,7 @@ class SecurityReportGenerator:
         all_findings = self._collect_findings(results)
         return {
             "report": {
-                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "total_findings": len(all_findings),
                 "severity_summary": self._severity_counts(all_findings),
                 "scanners": [r.to_dict() for r in results],
@@ -144,7 +143,7 @@ class SecurityReportGenerator:
             from rich.text import Text
         except ImportError:  # pragma: no cover
             # Graceful degradation — fall back to plain text.
-            print(self.generate_text_report(results))  # noqa: T201
+            print(self.generate_text_report(results))
             return
 
         console = Console()
@@ -187,7 +186,7 @@ class SecurityReportGenerator:
             console.print()
             scanner_table = Table(
                 title=f"{result.scanner_name}  ({result.total_findings} findings, "
-                      f"{result.scan_duration_ms:.1f} ms)",
+                f"{result.scan_duration_ms:.1f} ms)",
                 show_header=True,
                 header_style="bold white",
                 border_style="dim",
@@ -221,8 +220,7 @@ class SecurityReportGenerator:
 
         console.print()
         console.print(
-            f"[dim]Report generated at "
-            f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}[/dim]"
+            f"[dim]Report generated at {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}[/dim]"
         )
         console.print()
 
@@ -247,9 +245,7 @@ class SecurityReportGenerator:
         return counts
 
     @staticmethod
-    def _text_summary(
-        findings: list[Finding], results: list[ScanResult]
-    ) -> str:
+    def _text_summary(findings: list[Finding], results: list[ScanResult]) -> str:
         """Build the summary block for the text report."""
         counts = SecurityReportGenerator._severity_counts(findings)
         total_duration = sum(r.scan_duration_ms for r in results)

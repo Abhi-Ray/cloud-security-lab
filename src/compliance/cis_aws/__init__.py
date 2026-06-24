@@ -6,6 +6,8 @@ Foundations Benchmark covering IAM, logging, encryption, and networking.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from compliance.cis_aws.encryption_checks import (
     CIS_ENCRYPTION_CHECKS,
     check_3_1_ebs_encryption_default,
@@ -33,10 +35,17 @@ from compliance.cis_aws.networking_checks import (
     check_4_2_no_unrestricted_ssh,
     check_4_3_vpc_flow_logs_enabled,
 )
-from compliance.models import ComplianceCheck
 
+if TYPE_CHECKING:
+    from compliance.models import ComplianceCheck
 
 __all__ = [
+    "ALL_CIS_AWS_CHECKS",
+    "CIS_ENCRYPTION_CHECKS",
+    # Pre-built check lists
+    "CIS_IAM_CHECKS",
+    "CIS_LOGGING_CHECKS",
+    "CIS_NETWORKING_CHECKS",
     # IAM checks
     "check_1_1_root_account_no_access_keys",
     "check_1_2_root_mfa_enabled",
@@ -56,12 +65,6 @@ __all__ = [
     "check_4_1_default_sg_restricts_all",
     "check_4_2_no_unrestricted_ssh",
     "check_4_3_vpc_flow_logs_enabled",
-    # Pre-built check lists
-    "CIS_IAM_CHECKS",
-    "CIS_LOGGING_CHECKS",
-    "CIS_ENCRYPTION_CHECKS",
-    "CIS_NETWORKING_CHECKS",
-    "ALL_CIS_AWS_CHECKS",
 ]
 
 

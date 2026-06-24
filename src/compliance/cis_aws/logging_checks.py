@@ -16,18 +16,18 @@ from compliance.models import (
     Severity,
 )
 
-
 __all__ = [
+    "CIS_LOGGING_CHECKS",
     "check_2_1_cloudtrail_enabled",
     "check_2_2_cloudtrail_log_validation",
     "check_2_3_cloudtrail_encrypted",
-    "CIS_LOGGING_CHECKS",
 ]
 
 
 # ---------------------------------------------------------------------------
 # Check 2.1 – CloudTrail enabled
 # ---------------------------------------------------------------------------
+
 
 def check_2_1_cloudtrail_enabled(config: dict[str, Any]) -> CheckResult:
     """Ensure CloudTrail is enabled in all regions.
@@ -47,8 +47,7 @@ def check_2_1_cloudtrail_enabled(config: dict[str, Any]) -> CheckResult:
     trails: list[dict[str, Any]] = logging_cfg.get("cloudtrail", {}).get("trails", [])
 
     active_trails = [
-        t for t in trails
-        if t.get("is_logging", False) and t.get("is_multi_region", False)
+        t for t in trails if t.get("is_logging", False) and t.get("is_multi_region", False)
     ]
 
     if active_trails:
@@ -74,6 +73,7 @@ def check_2_1_cloudtrail_enabled(config: dict[str, Any]) -> CheckResult:
 # ---------------------------------------------------------------------------
 # Check 2.2 – CloudTrail log validation
 # ---------------------------------------------------------------------------
+
 
 def check_2_2_cloudtrail_log_validation(config: dict[str, Any]) -> CheckResult:
     """Ensure CloudTrail log file validation is enabled.
@@ -134,6 +134,7 @@ def check_2_2_cloudtrail_log_validation(config: dict[str, Any]) -> CheckResult:
 # Check 2.3 – CloudTrail encrypted
 # ---------------------------------------------------------------------------
 
+
 def check_2_3_cloudtrail_encrypted(config: dict[str, Any]) -> CheckResult:
     """Ensure CloudTrail logs are encrypted at rest using KMS.
 
@@ -159,11 +160,7 @@ def check_2_3_cloudtrail_encrypted(config: dict[str, Any]) -> CheckResult:
             recommendation="Configure CloudTrail with KMS encryption.",
         )
 
-    unencrypted = [
-        t.get("name", "<unknown>")
-        for t in trails
-        if not t.get("kms_key_id")
-    ]
+    unencrypted = [t.get("name", "<unknown>") for t in trails if not t.get("kms_key_id")]
 
     if not unencrypted:
         return CheckResult(
@@ -177,8 +174,7 @@ def check_2_3_cloudtrail_encrypted(config: dict[str, Any]) -> CheckResult:
         check=check,
         status=CheckStatus.FAIL,
         details=(
-            f"{len(unencrypted)} trail(s) are not encrypted with KMS: "
-            f"{', '.join(unencrypted)}."
+            f"{len(unencrypted)} trail(s) are not encrypted with KMS: {', '.join(unencrypted)}."
         ),
         evidence={"unencrypted_trails": unencrypted},
         recommendation=(

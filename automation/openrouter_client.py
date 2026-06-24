@@ -10,15 +10,16 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from automation.config import AgentConfig
+if TYPE_CHECKING:
+    from automation.config import AgentConfig
 
-__all__ = ["OpenRouterClient", "RateLimitExceeded", "APINotConfigured"]
+__all__ = ["APINotConfigured", "OpenRouterClient", "RateLimitExceeded"]
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +158,7 @@ class OpenRouterClient:
         Args:
             usage: Dict with ``date`` and ``count``.
         """
-        usage["last_updated"] = datetime.now(timezone.utc).isoformat()
+        usage["last_updated"] = datetime.now(UTC).isoformat()
         with self._rate_file.open("w", encoding="utf-8") as fh:
             json.dump(usage, fh, indent=2)
 

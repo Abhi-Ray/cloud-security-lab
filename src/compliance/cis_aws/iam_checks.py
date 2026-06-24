@@ -6,7 +6,7 @@ security, credential rotation, password policies, and least-privilege access.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from compliance.models import (
@@ -17,21 +17,21 @@ from compliance.models import (
     Severity,
 )
 
-
 __all__ = [
+    "CIS_IAM_CHECKS",
     "check_1_1_root_account_no_access_keys",
     "check_1_2_root_mfa_enabled",
     "check_1_3_unused_credentials_disabled",
     "check_1_4_access_keys_rotated",
     "check_1_5_password_policy",
     "check_1_6_no_full_admin_policies",
-    "CIS_IAM_CHECKS",
 ]
 
 
 # ---------------------------------------------------------------------------
 # Check 1.1 – Root account access keys
 # ---------------------------------------------------------------------------
+
 
 def check_1_1_root_account_no_access_keys(config: dict[str, Any]) -> CheckResult:
     """Ensure no root account access keys exist.
@@ -73,6 +73,7 @@ def check_1_1_root_account_no_access_keys(config: dict[str, Any]) -> CheckResult
 # ---------------------------------------------------------------------------
 # Check 1.2 – Root MFA enabled
 # ---------------------------------------------------------------------------
+
 
 def check_1_2_root_mfa_enabled(config: dict[str, Any]) -> CheckResult:
     """Ensure MFA is enabled for the root account.
@@ -133,7 +134,7 @@ def check_1_3_unused_credentials_disabled(config: dict[str, Any]) -> CheckResult
     check = _CHECKS["1.3"]
     iam = config.get("iam", {})
     users: list[dict[str, Any]] = iam.get("users", [])
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stale_users: list[str] = []
 
     for user in users:
@@ -144,7 +145,7 @@ def check_1_3_unused_credentials_disabled(config: dict[str, Any]) -> CheckResult
         if last_used_str is not None:
             last_used = datetime.fromisoformat(last_used_str)
             if last_used.tzinfo is None:
-                last_used = last_used.replace(tzinfo=timezone.utc)
+                last_used = last_used.replace(tzinfo=UTC)
             age_days = (now - last_used).days
             if age_days >= _UNUSED_THRESHOLD_DAYS:
                 stale_users.append(user.get("username", "<unknown>"))
@@ -195,7 +196,7 @@ def check_1_4_access_keys_rotated(config: dict[str, Any]) -> CheckResult:
     check = _CHECKS["1.4"]
     iam = config.get("iam", {})
     users: list[dict[str, Any]] = iam.get("users", [])
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stale_keys: list[dict[str, Any]] = []
 
     for user in users:
@@ -207,14 +208,16 @@ def check_1_4_access_keys_rotated(config: dict[str, Any]) -> CheckResult:
                 continue
             created = datetime.fromisoformat(created_str)
             if created.tzinfo is None:
-                created = created.replace(tzinfo=timezone.utc)
+                created = created.replace(tzinfo=UTC)
             age_days = (now - created).days
             if age_days >= _ROTATION_THRESHOLD_DAYS:
-                stale_keys.append({
-                    "username": user.get("username", "<unknown>"),
-                    "key_id": key.get("key_id", "<unknown>"),
-                    "age_days": age_days,
-                })
+                stale_keys.append(
+                    {
+                        "username": user.get("username", "<unknown>"),
+                        "key_id": key.get("key_id", "<unknown>"),
+                        "age_days": age_days,
+                    }
+                )
 
     if not stale_keys:
         return CheckResult(
@@ -272,9 +275,7 @@ def check_1_5_password_policy(config: dict[str, Any]) -> CheckResult:
     actual_min = policy.get("minimum_length", 0)
     required_min = _REQUIRED_PASSWORD_POLICY["minimum_length"]
     if actual_min < required_min:
-        violations.append(
-            f"minimum_length is {actual_min}, required >= {required_min}"
-        )
+        violations.append(f"minimum_length is {actual_min}, required >= {required_min}")
 
     for flag in ("require_uppercase", "require_lowercase", "require_numbers", "require_symbols"):
         if not policy.get(flag, False):
@@ -304,6 +305,7 @@ def check_1_5_password_policy(config: dict[str, Any]) -> CheckResult:
 # ---------------------------------------------------------------------------
 # Check 1.6 – No full admin policies
 # ---------------------------------------------------------------------------
+
 
 def check_1_6_no_full_admin_policies(config: dict[str, Any]) -> CheckResult:
     """Ensure no IAM policies allow full *:* administrator access.
@@ -399,8 +401,7 @@ _CHECKS: dict[str, ComplianceCheck] = {
         id="cis-aws-1.4",
         title="Ensure access keys are rotated within 90 days",
         description=(
-            "Regular key rotation limits the window of exposure when a "
-            "key is compromised."
+            "Regular key rotation limits the window of exposure when a key is compromised."
         ),
         framework=Framework.CIS_AWS,
         section="1.4",
@@ -423,8 +424,7 @@ _CHECKS: dict[str, ComplianceCheck] = {
         id="cis-aws-1.6",
         title="Ensure no IAM policies allow full *:* admin access",
         description=(
-            "Policies granting unrestricted admin access violate the "
-            "principle of least privilege."
+            "Policies granting unrestricted admin access violate the principle of least privilege."
         ),
         framework=Framework.CIS_AWS,
         section="1.6",

@@ -9,18 +9,20 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Callable, Protocol
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any, Protocol
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
-    "Framework",
-    "CheckStatus",
-    "Severity",
-    "ComplianceCheck",
-    "CheckResult",
-    "ComplianceReport",
     "CheckFunction",
+    "CheckResult",
+    "CheckStatus",
+    "ComplianceCheck",
+    "ComplianceReport",
+    "Framework",
+    "Severity",
 ]
 
 
@@ -36,7 +38,7 @@ class Framework(enum.Enum):
 class CheckStatus(enum.Enum):
     """Outcome status for an individual compliance check."""
 
-    PASS = "PASS"
+    PASS = "PASS"  # noqa: S105
     FAIL = "FAIL"
     ERROR = "ERROR"
     NOT_APPLICABLE = "NOT_APPLICABLE"
@@ -121,7 +123,7 @@ class ComplianceReport:
     """
 
     framework: Framework
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     results: list[CheckResult] = field(default_factory=list)
     pass_count: int = 0
     fail_count: int = 0
@@ -131,15 +133,9 @@ class ComplianceReport:
 
     def calculate_stats(self) -> None:
         """Recompute counts and score from the current results list."""
-        self.pass_count = sum(
-            1 for r in self.results if r.status == CheckStatus.PASS
-        )
-        self.fail_count = sum(
-            1 for r in self.results if r.status == CheckStatus.FAIL
-        )
-        self.error_count = sum(
-            1 for r in self.results if r.status == CheckStatus.ERROR
-        )
+        self.pass_count = sum(1 for r in self.results if r.status == CheckStatus.PASS)
+        self.fail_count = sum(1 for r in self.results if r.status == CheckStatus.FAIL)
+        self.error_count = sum(1 for r in self.results if r.status == CheckStatus.ERROR)
         self.not_applicable_count = sum(
             1 for r in self.results if r.status == CheckStatus.NOT_APPLICABLE
         )

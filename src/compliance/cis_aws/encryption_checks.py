@@ -17,18 +17,18 @@ from compliance.models import (
     Severity,
 )
 
-
 __all__ = [
+    "CIS_ENCRYPTION_CHECKS",
     "check_3_1_ebs_encryption_default",
     "check_3_2_s3_bucket_encryption",
     "check_3_3_rds_encryption",
-    "CIS_ENCRYPTION_CHECKS",
 ]
 
 
 # ---------------------------------------------------------------------------
 # Check 3.1 – EBS encryption by default
 # ---------------------------------------------------------------------------
+
 
 def check_3_1_ebs_encryption_default(config: dict[str, Any]) -> CheckResult:
     """Ensure EBS encryption by default is enabled.
@@ -70,6 +70,7 @@ def check_3_1_ebs_encryption_default(config: dict[str, Any]) -> CheckResult:
 # Check 3.2 – S3 bucket encryption
 # ---------------------------------------------------------------------------
 
+
 def check_3_2_s3_bucket_encryption(config: dict[str, Any]) -> CheckResult:
     """Ensure all S3 buckets have encryption enabled.
 
@@ -95,9 +96,7 @@ def check_3_2_s3_bucket_encryption(config: dict[str, Any]) -> CheckResult:
         )
 
     unencrypted: list[str] = [
-        b.get("name", "<unknown>")
-        for b in buckets
-        if not b.get("encryption_enabled", False)
+        b.get("name", "<unknown>") for b in buckets if not b.get("encryption_enabled", False)
     ]
 
     if not unencrypted:
@@ -127,6 +126,7 @@ def check_3_2_s3_bucket_encryption(config: dict[str, Any]) -> CheckResult:
 # Check 3.3 – RDS encryption
 # ---------------------------------------------------------------------------
 
+
 def check_3_3_rds_encryption(config: dict[str, Any]) -> CheckResult:
     """Ensure all RDS instances are encrypted at rest.
 
@@ -152,9 +152,7 @@ def check_3_3_rds_encryption(config: dict[str, Any]) -> CheckResult:
         )
 
     unencrypted: list[str] = [
-        inst.get("id", "<unknown>")
-        for inst in instances
-        if not inst.get("encrypted", False)
+        inst.get("id", "<unknown>") for inst in instances if not inst.get("encrypted", False)
     ]
 
     if not unencrypted:
@@ -169,8 +167,7 @@ def check_3_3_rds_encryption(config: dict[str, Any]) -> CheckResult:
         check=check,
         status=CheckStatus.FAIL,
         details=(
-            f"{len(unencrypted)} RDS instance(s) are NOT encrypted: "
-            f"{', '.join(unencrypted)}."
+            f"{len(unencrypted)} RDS instance(s) are NOT encrypted: {', '.join(unencrypted)}."
         ),
         evidence={"unencrypted_instances": unencrypted},
         recommendation=(

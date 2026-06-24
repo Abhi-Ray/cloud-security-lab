@@ -132,9 +132,9 @@ class TestDetectionEngine:
         """Should detect root console login."""
         matches = engine.process_event(root_login_event)
         assert len(matches) > 0, "Should detect root console login"
-        assert any(
-            m.rule.severity == RuleSeverity.CRITICAL for m in matches
-        ), "Root login should be CRITICAL"
+        assert any(m.rule.severity == RuleSeverity.CRITICAL for m in matches), (
+            "Root login should be CRITICAL"
+        )
 
     def test_ignores_normal_user_login(self, engine, normal_user_login_event):
         """Should NOT trigger on normal IAM user login."""
@@ -154,16 +154,15 @@ class TestDetectionEngine:
         """Should detect CloudTrail being stopped."""
         matches = engine.process_event(cloudtrail_stop_event)
         assert len(matches) > 0, "Should detect CloudTrail StopLogging"
-        assert any(
-            m.rule.severity == RuleSeverity.CRITICAL for m in matches
-        ), "StopLogging should be CRITICAL"
+        assert any(m.rule.severity == RuleSeverity.CRITICAL for m in matches), (
+            "StopLogging should be CRITICAL"
+        )
 
     def test_ignores_normal_api_calls(self, engine, normal_api_event):
         """Should NOT trigger on normal API calls like DescribeInstances."""
         matches = engine.process_event(normal_api_event)
         assert len(matches) == 0, (
-            f"Normal API calls should not trigger detections, got: "
-            f"{[m.rule.name for m in matches]}"
+            f"Normal API calls should not trigger detections, got: {[m.rule.name for m in matches]}"
         )
 
     def test_detects_sg_open(self, engine, sg_open_event):
@@ -171,7 +170,9 @@ class TestDetectionEngine:
         matches = engine.process_event(sg_open_event)
         assert len(matches) > 0, "Should detect SG opened to 0.0.0.0/0"
 
-    def test_process_multiple_events(self, engine, root_login_event, normal_api_event, cloudtrail_stop_event):
+    def test_process_multiple_events(
+        self, engine, root_login_event, normal_api_event, cloudtrail_stop_event
+    ):
         """Should process multiple events and return summary."""
         events = [root_login_event, normal_api_event, cloudtrail_stop_event]
         summary = engine.process_events(events)
@@ -189,7 +190,5 @@ class TestDetectionEngine:
     def test_all_rules_have_severity(self, engine):
         """All detection rules should have a severity level."""
         for rule in engine.get_rules():
-            assert rule.severity is not None, (
-                f"Rule '{rule.name}' should have a severity"
-            )
+            assert rule.severity is not None, f"Rule '{rule.name}' should have a severity"
             assert isinstance(rule.severity, RuleSeverity)

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-__all__ = ["GitManager", "ConventionalCommitError"]
+__all__ = ["ConventionalCommitError", "GitManager"]
 
 logger = logging.getLogger(__name__)
 
@@ -122,9 +122,7 @@ class GitManager:
 
         # Uncommitted changes
         status_result = self._run(["git", "status", "--porcelain"])
-        changes = [
-            line.strip() for line in status_result.stdout.splitlines() if line.strip()
-        ]
+        changes = [line.strip() for line in status_result.stdout.splitlines() if line.strip()]
 
         # Recent commits
         recent = self.get_recent_commits(n=5)
@@ -213,12 +211,17 @@ class GitManager:
         self._validate_conventional_commit(message)
 
         author = f"{author_name} <{author_email}>"
-        self._run([
-            "git", "commit",
-            "-m", message,
-            "--author", author,
-            "--allow-empty",  # in case no staged changes
-        ])
+        self._run(
+            [
+                "git",
+                "commit",
+                "-m",
+                message,
+                "--author",
+                author,
+                "--allow-empty",  # in case no staged changes
+            ]
+        )
 
         sha_result = self._run(["git", "rev-parse", "--short", "HEAD"])
         sha = sha_result.stdout.strip()
@@ -249,9 +252,7 @@ class GitManager:
         # Check remote exists
         remote_check = self._run(["git", "remote", "get-url", remote], check=False)
         if remote_check.returncode != 0:
-            logger.warning(
-                "Remote '%s' is not configured — skipping push", remote
-            )
+            logger.warning("Remote '%s' is not configured — skipping push", remote)
             return False
 
         push_result = self._run(
@@ -286,12 +287,14 @@ class GitManager:
         for line in result.stdout.strip().splitlines():
             parts = line.split("\x00")
             if len(parts) >= 4:
-                commits.append(CommitInfo(
-                    sha=parts[0],
-                    author=parts[1],
-                    date=parts[2],
-                    message=parts[3],
-                ))
+                commits.append(
+                    CommitInfo(
+                        sha=parts[0],
+                        author=parts[1],
+                        date=parts[2],
+                        message=parts[3],
+                    )
+                )
         return commits
 
     # ------------------------------------------------------------------

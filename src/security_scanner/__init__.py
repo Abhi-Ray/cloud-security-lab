@@ -23,18 +23,18 @@ from security_scanner.models import Finding, ScanConfig, ScanResult, Severity
 from security_scanner.report import SecurityReportGenerator
 
 __all__ = [
-    # Version
-    "__version__",
-    # Models
-    "Finding",
-    "ScanConfig",
-    "ScanResult",
-    "Severity",
     # Scanners
     "BaseScanner",
     "CloudTrailScanner",
+    # Models
+    "Finding",
     "IAMScanner",
     "S3Scanner",
+    "ScanConfig",
+    "ScanResult",
     # Reporting
     "SecurityReportGenerator",
+    "Severity",
+    # Version
+    "__version__",
 ]

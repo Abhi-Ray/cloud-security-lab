@@ -12,10 +12,10 @@ import pytest
 from security_scanner.aws.iam_scanner import IAMScanner
 from security_scanner.models import Finding, ScanConfig, ScanResult, Severity
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _scan_iam(config_dict: dict) -> ScanResult:
     """Run the IAM scanner against the given raw config dict."""
@@ -47,7 +47,10 @@ def _has_finding_with(
             continue
         if title_contains is not None and title_contains.lower() not in f.title.lower():
             continue
-        if resource_id_contains is not None and resource_id_contains.lower() not in f.resource_id.lower():
+        if (
+            resource_id_contains is not None
+            and resource_id_contains.lower() not in f.resource_id.lower()
+        ):
             continue
         return True
     return False
@@ -62,9 +65,7 @@ def _has_finding_with(
 class TestIAMRootAccount:
     """Tests for root account security checks."""
 
-    def test_iam_scanner_detects_root_access_keys(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_detects_root_access_keys(self, aws_config_insecure: dict) -> None:
         """Root account with access keys should produce a CRITICAL finding."""
         result = _scan_iam(aws_config_insecure)
 
@@ -72,10 +73,7 @@ class TestIAMRootAccount:
             result,
             severity=Severity.CRITICAL,
             title_contains="root",
-        ), (
-            f"Expected a CRITICAL finding about root access keys. "
-            f"Got findings: {_titles(result)}"
-        )
+        ), f"Expected a CRITICAL finding about root access keys. Got findings: {_titles(result)}"
 
     def test_iam_scanner_no_root_access_key_finding_on_secure(
         self, aws_config_secure: dict
@@ -105,26 +103,19 @@ class TestIAMRootAccount:
 class TestIAMMFA:
     """Tests for MFA enforcement checks."""
 
-    def test_iam_scanner_detects_missing_mfa(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_detects_missing_mfa(self, aws_config_insecure: dict) -> None:
         """Users without MFA should produce HIGH findings."""
         result = _scan_iam(aws_config_insecure)
 
         mfa_findings = [
-            f
-            for f in result.findings
-            if "mfa" in f.title.lower() and f.severity == Severity.HIGH
+            f for f in result.findings if "mfa" in f.title.lower() and f.severity == Severity.HIGH
         ]
         # Insecure config has 2 users without MFA
         assert len(mfa_findings) >= 1, (
-            f"Expected at least 1 HIGH finding about missing MFA. "
-            f"Got findings: {_titles(result)}"
+            f"Expected at least 1 HIGH finding about missing MFA. Got findings: {_titles(result)}"
         )
 
-    def test_iam_scanner_no_mfa_finding_on_secure(
-        self, aws_config_secure: dict
-    ) -> None:
+    def test_iam_scanner_no_mfa_finding_on_secure(self, aws_config_secure: dict) -> None:
         """Secure config (all users have MFA) should not flag MFA issues."""
         result = _scan_iam(aws_config_secure)
 
@@ -148,9 +139,7 @@ class TestIAMMFA:
 class TestIAMUnusedCredentials:
     """Tests for unused and stale credential detection."""
 
-    def test_iam_scanner_detects_unused_credentials(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_detects_unused_credentials(self, aws_config_insecure: dict) -> None:
         """Users with >90 days inactivity should produce findings."""
         result = _scan_iam(aws_config_insecure)
 
@@ -163,13 +152,10 @@ class TestIAMUnusedCredentials:
             )
         ]
         assert len(inactive_findings) >= 1, (
-            f"Expected at least 1 finding about unused credentials. "
-            f"Got findings: {_titles(result)}"
+            f"Expected at least 1 finding about unused credentials. Got findings: {_titles(result)}"
         )
 
-    def test_iam_scanner_detects_old_access_keys(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_detects_old_access_keys(self, aws_config_insecure: dict) -> None:
         """Access keys older than 90 days should produce MEDIUM findings."""
         result = _scan_iam(aws_config_insecure)
 
@@ -182,8 +168,7 @@ class TestIAMUnusedCredentials:
             )
         ]
         assert len(old_key_findings) >= 1, (
-            f"Expected at least 1 finding about old access keys. "
-            f"Got findings: {_titles(result)}"
+            f"Expected at least 1 finding about old access keys. Got findings: {_titles(result)}"
         )
 
         # All old-key findings should be at least MEDIUM severity.
@@ -203,9 +188,7 @@ class TestIAMUnusedCredentials:
 class TestIAMPolicies:
     """Tests for IAM policy analysis."""
 
-    def test_iam_scanner_detects_admin_policy(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_detects_admin_policy(self, aws_config_insecure: dict) -> None:
         """Policies with Action: * and Resource: * should produce CRITICAL findings."""
         result = _scan_iam(aws_config_insecure)
 
@@ -233,9 +216,7 @@ class TestIAMPolicies:
 class TestIAMPasswordPolicy:
     """Tests for password policy strength evaluation."""
 
-    def test_iam_scanner_detects_weak_password_policy(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_detects_weak_password_policy(self, aws_config_insecure: dict) -> None:
         """Weak password policy should produce at least a MEDIUM finding."""
         result = _scan_iam(aws_config_insecure)
 
@@ -263,9 +244,7 @@ class TestIAMCleanConfig:
         """Secure config should produce no findings above INFO severity."""
         result = _scan_iam(aws_config_secure)
 
-        non_info_findings = [
-            f for f in result.findings if f.severity != Severity.INFO
-        ]
+        non_info_findings = [f for f in result.findings if f.severity != Severity.INFO]
         assert non_info_findings == [], (
             f"Secure config should have no findings above INFO, "
             f"but got: {[(f.title, f.severity.value) for f in non_info_findings]}"
@@ -276,9 +255,7 @@ class TestIAMCleanConfig:
 class TestIAMScanResult:
     """Tests for scan result structure and metadata."""
 
-    def test_iam_scanner_returns_scan_result(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_returns_scan_result(self, aws_config_insecure: dict) -> None:
         """Scan result should have correct scanner_name and structure."""
         result = _scan_iam(aws_config_insecure)
 
@@ -314,9 +291,7 @@ class TestIAMScanResult:
         assert "TOTAL" in summary
         assert summary["TOTAL"] == result.total_findings
 
-    def test_iam_scanner_scan_duration_is_positive(
-        self, aws_config_insecure: dict
-    ) -> None:
+    def test_iam_scanner_scan_duration_is_positive(self, aws_config_insecure: dict) -> None:
         """Scan duration should be a positive number (indicating timing)."""
         result = _scan_iam(aws_config_insecure)
         assert result.scan_duration_ms >= 0

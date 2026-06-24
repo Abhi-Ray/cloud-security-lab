@@ -17,18 +17,18 @@ from compliance.models import (
     Severity,
 )
 
-
 __all__ = [
+    "CIS_NETWORKING_CHECKS",
     "check_4_1_default_sg_restricts_all",
     "check_4_2_no_unrestricted_ssh",
     "check_4_3_vpc_flow_logs_enabled",
-    "CIS_NETWORKING_CHECKS",
 ]
 
 
 # ---------------------------------------------------------------------------
 # Check 4.1 – Default security group restricts all traffic
 # ---------------------------------------------------------------------------
+
 
 def check_4_1_default_sg_restricts_all(config: dict[str, Any]) -> CheckResult:
     """Ensure the default security group of every VPC restricts all traffic.
@@ -113,20 +113,17 @@ def check_4_2_no_unrestricted_ssh(config: dict[str, Any]) -> CheckResult:
             # Check for port 22 or port-range covering 22
             from_port = rule.get("from_port", port)
             to_port = rule.get("to_port", port)
-            port_match = (
-                (port is not None and port == _SSH_PORT)
-                or (
-                    from_port is not None
-                    and to_port is not None
-                    and from_port <= _SSH_PORT <= to_port
-                )
+            port_match = (port is not None and port == _SSH_PORT) or (
+                from_port is not None and to_port is not None and from_port <= _SSH_PORT <= to_port
             )
             if port_match and cidr in _UNRESTRICTED_CIDRS and protocol in ("tcp", "-1", "all"):
-                violating_sgs.append({
-                    "sg_id": sg.get("id", "<unknown>"),
-                    "sg_name": sg.get("name", "<unknown>"),
-                    "cidr": cidr,
-                })
+                violating_sgs.append(
+                    {
+                        "sg_id": sg.get("id", "<unknown>"),
+                        "sg_name": sg.get("name", "<unknown>"),
+                        "cidr": cidr,
+                    }
+                )
                 break  # one match per SG is enough
 
     if not violating_sgs:
@@ -140,9 +137,7 @@ def check_4_2_no_unrestricted_ssh(config: dict[str, Any]) -> CheckResult:
     return CheckResult(
         check=check,
         status=CheckStatus.FAIL,
-        details=(
-            f"{len(violating_sgs)} security group(s) allow unrestricted SSH (0.0.0.0/0)."
-        ),
+        details=(f"{len(violating_sgs)} security group(s) allow unrestricted SSH (0.0.0.0/0)."),
         evidence={"violating_sgs": violating_sgs},
         recommendation=(
             "Restrict SSH ingress rules to specific trusted CIDR ranges. "
@@ -154,6 +149,7 @@ def check_4_2_no_unrestricted_ssh(config: dict[str, Any]) -> CheckResult:
 # ---------------------------------------------------------------------------
 # Check 4.3 – VPC Flow Logs enabled
 # ---------------------------------------------------------------------------
+
 
 def check_4_3_vpc_flow_logs_enabled(config: dict[str, Any]) -> CheckResult:
     """Ensure VPC Flow Logs are enabled for all VPCs.
@@ -180,9 +176,7 @@ def check_4_3_vpc_flow_logs_enabled(config: dict[str, Any]) -> CheckResult:
         )
 
     no_flow_logs: list[str] = [
-        vpc.get("id", "<unknown>")
-        for vpc in vpcs
-        if not vpc.get("flow_logs_enabled", False)
+        vpc.get("id", "<unknown>") for vpc in vpcs if not vpc.get("flow_logs_enabled", False)
     ]
 
     if not no_flow_logs:
@@ -197,13 +191,11 @@ def check_4_3_vpc_flow_logs_enabled(config: dict[str, Any]) -> CheckResult:
         check=check,
         status=CheckStatus.FAIL,
         details=(
-            f"{len(no_flow_logs)} VPC(s) do not have Flow Logs enabled: "
-            f"{', '.join(no_flow_logs)}."
+            f"{len(no_flow_logs)} VPC(s) do not have Flow Logs enabled: {', '.join(no_flow_logs)}."
         ),
         evidence={"vpcs_without_flow_logs": no_flow_logs},
         recommendation=(
-            "Enable VPC Flow Logs for all VPCs and send them to CloudWatch "
-            "Logs or S3 for analysis."
+            "Enable VPC Flow Logs for all VPCs and send them to CloudWatch Logs or S3 for analysis."
         ),
     )
 

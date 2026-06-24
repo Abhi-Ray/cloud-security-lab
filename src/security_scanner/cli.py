@@ -188,6 +188,7 @@ DEMO_CONFIG: dict[str, Any] = {
 # Scanner registry
 # ======================================================================
 
+
 def _get_all_scanners() -> list[IAMScanner | S3Scanner | CloudTrailScanner]:
     """Instantiate all available scanners."""
     return [
@@ -206,6 +207,7 @@ def _run_scan(config: ScanConfig) -> list[ScanResult]:
 # ======================================================================
 # CLI definition
 # ======================================================================
+
 
 @click.group()
 @click.version_option(version="0.1.0", prog_name="cloudsec")
@@ -306,8 +308,6 @@ def scan(
         reporter.print_report(results)
 
     # Exit code: non-zero if any CRITICAL or HIGH findings
-    critical_high = sum(
-        r.critical_count + r.high_count for r in results
-    )
+    critical_high = sum(r.critical_count + r.high_count for r in results)
     if critical_high > 0:
         sys.exit(1)

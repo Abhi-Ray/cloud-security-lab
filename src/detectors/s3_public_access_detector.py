@@ -1,6 +1,7 @@
-"""Auto-generated Add S3 Public Access Detector.
+"""S3 Public Access Detector.
 
-Implement a new detector to identify S3 buckets with public read/write access via bucket policies and ACLs. Includes a compliance rule for CIS AWS Foundations Benchmark 2.1.1.
+Identifies S3 buckets with public read/write access via bucket policies and
+ACLs. Includes a compliance rule for CIS AWS Foundations Benchmark 2.1.1.
 """
 
 from __future__ import annotations
@@ -16,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class S3PublicAccessDetector:
-    """Scanner for Add S3 Public Access Detector.
+    """Scanner for S3 Public Access Detector.
 
-    Implement a new detector to identify S3 buckets with public read/write access via bucket policies and ACLs. Includes a compliance rule for CIS AWS Foundations Benchmark 2.1.1.
+    Identifies S3 buckets with public read/write access via bucket policies
+    and ACLs. Includes a compliance rule for CIS AWS Foundations Benchmark 2.1.1.
     """
 
     name: str = "Add S3 Public Access Detector"
@@ -40,52 +42,56 @@ class S3PublicAccessDetector:
         findings.extend(self._check_public_access(config))
         findings.extend(self._check_logging(config))
 
-        logger.info(
-            "Scan complete — %d finding(s) detected", len(findings)
-        )
+        logger.info("Scan complete — %d finding(s) detected", len(findings))
         return findings
 
     def _check_encryption(self, config: dict[str, Any]) -> list[Finding]:
         """Check encryption configuration."""
         findings: list[Finding] = []
         if not config.get("encryption_enabled", False):
-            findings.append(Finding(
-                id="DET001-001",
-                title="Encryption not enabled",
-                severity=Severity.HIGH,
-                resource_type="Cloud Resource",
-                resource_id=config.get("resource_id", "unknown"),
-                description="Resource does not have encryption enabled at rest.",
-                recommendation="Enable encryption using AWS KMS or service-default keys.",
-            ))
+            findings.append(
+                Finding(
+                    id="DET001-001",
+                    title="Encryption not enabled",
+                    severity=Severity.HIGH,
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
+                    description="Resource does not have encryption enabled at rest.",
+                    recommendation="Enable encryption using AWS KMS or service-default keys.",
+                )
+            )
         return findings
 
     def _check_public_access(self, config: dict[str, Any]) -> list[Finding]:
         """Check public access configuration."""
         findings: list[Finding] = []
         if config.get("publicly_accessible", False):
-            findings.append(Finding(
-                id="DET001-002",
-                title="Resource is publicly accessible",
-                severity=Severity.CRITICAL,
-                resource_type="Cloud Resource",
-                resource_id=config.get("resource_id", "unknown"),
-                description="Resource is configured for public access.",
-                recommendation="Disable public access and restrict to VPC.",
-            ))
+            findings.append(
+                Finding(
+                    id="DET001-002",
+                    title="Resource is publicly accessible",
+                    severity=Severity.CRITICAL,
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
+                    description="Resource is configured for public access.",
+                    recommendation="Disable public access and restrict to VPC.",
+                )
+            )
         return findings
 
     def _check_logging(self, config: dict[str, Any]) -> list[Finding]:
         """Check logging / monitoring configuration."""
         findings: list[Finding] = []
         if not config.get("logging_enabled", False):
-            findings.append(Finding(
-                id="DET001-003",
-                title="Logging not enabled",
-                severity=Severity.MEDIUM,
-                resource_type="Cloud Resource",
-                resource_id=config.get("resource_id", "unknown"),
-                description="Audit logging is not enabled for this resource.",
-                recommendation="Enable audit logging for security monitoring.",
-            ))
+            findings.append(
+                Finding(
+                    id="DET001-003",
+                    title="Logging not enabled",
+                    severity=Severity.MEDIUM,
+                    resource_type="Cloud Resource",
+                    resource_id=config.get("resource_id", "unknown"),
+                    description="Audit logging is not enabled for this resource.",
+                    recommendation="Enable audit logging for security monitoring.",
+                )
+            )
         return findings
