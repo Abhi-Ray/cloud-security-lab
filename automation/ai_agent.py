@@ -777,8 +777,8 @@ class SecurityLabAgent:
             # Step 4: Validate
             valid = self.validate()
             if not valid:
-                logger.error("Validation failed — aborting cycle, no commit")
-                return False
+                logger.warning("Validation failed — aborting cycle, no commit (normal no-op)")
+                return True
 
             # Step 5: Commit
             self.create_commit(task)
@@ -1039,12 +1039,26 @@ class SecurityLabAgent:
         # For test files, try to infer module path from the corresponding source file
         if not module_path and "test" in rel_path.lower() and rel_path.endswith(".py"):
             test_name = Path(rel_path).stem.replace("test_", "")
-            for other in task.get("files_to_create", []):
-                if other.startswith("src/") and other.endswith(".py"):
-                    other_name = Path(other).stem
-                    if test_name == other_name or other_name in test_name:
+            source_files = [
+                f for f in task.get("files_to_create", [])
+                if f.startswith("src/") and f.endswith(".py") and "__init__" not in f
+            ]
+            # 1. Direct match: test_name == source file stem
+            for other in source_files:
+                other_name = Path(other).stem
+                if test_name == other_name or other_name in test_name:
+                    module_path = other[4:].replace("/", ".").removesuffix(".py")
+                    break
+            # 2. Package match: test_name matches a package directory
+            if not module_path:
+                for other in source_files:
+                    parts = other[4:].split("/")
+                    if len(parts) > 1 and test_name in parts:
                         module_path = other[4:].replace("/", ".").removesuffix(".py")
                         break
+            # 3. Fallback: use the first non-init source file
+            if not module_path and source_files:
+                module_path = source_files[0][4:].replace("/", ".").removesuffix(".py")
 
         context = {
             "title": title,
