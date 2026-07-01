@@ -16,7 +16,7 @@ on:
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     permissions:
       contents: write
       pull-requests: write
@@ -101,8 +101,8 @@ jobs:
           PR_NUM=$(basename "$PR_URL")
           echo "Waiting for CI checks on PR #$PR_NUM..."
 
-          # Wait up to 5 minutes for checks to complete
-          TIMEOUT=300
+          # Wait up to 10 minutes for checks to complete
+          TIMEOUT=600
           ELAPSED=0
           while [ $ELAPSED -lt $TIMEOUT ]; do
             STATUS=$(gh pr checks "$PR_NUM" --json state --jq '[.[].state] | all(. == "PASS" or . == "SKIP")' 2>/dev/null || echo "false")
