@@ -1015,6 +1015,14 @@ class SecurityLabAgent:
         category = task.get("category", "")
         task_id = task.get("id", "task")
 
+        # Wrap description to stay within line-length limits (100 chars)
+        import textwrap as _textwrap
+
+        _desc_indent = "    "
+        description_wrapped = _textwrap.fill(
+            description, width=88, initial_indent="", subsequent_indent=_desc_indent
+        ).strip()
+
         # Derive class name from title (sanitized to valid Python identifier)
         _skip = {"add", "implement", "create", "write", "a", "an", "the", "for", "with"}
         import re
@@ -1064,7 +1072,7 @@ class SecurityLabAgent:
         context = {
             "title": title,
             "title_lower": title.lower(),
-            "description": description,
+            "description": description_wrapped,
             "class_name": class_name,
             "rule_prefix": rule_prefix,
             "module_path": module_path,

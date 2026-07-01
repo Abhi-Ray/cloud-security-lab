@@ -1,6 +1,8 @@
-"""Auto-generated Add EBS Volume Encryption Detector.
+"""EBS Volume Encryption Detector.
 
-Implement a new detector in the 'detectors' module to identify unencrypted Amazon EBS volumes. The detector should scan AWS EC2 resources, flag volumes without encryption enabled, and integrate with the existing security_scanner framework. Include unit tests covering positive (encrypted) and negative (unencrypted) cases, and ensure the detector follows the project's plugin interface.
+Identifies unencrypted Amazon EBS volumes. Scans AWS EC2 resources and
+flags volumes without encryption enabled. Integrates with the existing
+security_scanner framework.
 """
 
 from __future__ import annotations
@@ -16,9 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class EbsVolumeEncryptionDetector:
-    """Scanner for Add EBS Volume Encryption Detector.
+    """Scanner for EBS Volume Encryption Detector.
 
-    Implement a new detector in the 'detectors' module to identify unencrypted Amazon EBS volumes. The detector should scan AWS EC2 resources, flag volumes without encryption enabled, and integrate with the existing security_scanner framework. Include unit tests covering positive (encrypted) and negative (unencrypted) cases, and ensure the detector follows the project's plugin interface.
+    Identifies unencrypted Amazon EBS volumes. Scans AWS EC2 resources
+    and flags volumes without encryption enabled.
     """
 
     name: str = "Add EBS Volume Encryption Detector"
