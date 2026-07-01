@@ -1040,7 +1040,8 @@ class SecurityLabAgent:
         if not module_path and "test" in rel_path.lower() and rel_path.endswith(".py"):
             test_name = Path(rel_path).stem.replace("test_", "")
             source_files = [
-                f for f in task.get("files_to_create", [])
+                f
+                for f in task.get("files_to_create", [])
                 if f.startswith("src/") and f.endswith(".py") and "__init__" not in f
             ]
             # 1. Direct match: test_name == source file stem
