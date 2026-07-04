@@ -105,10 +105,11 @@ jobs:
           TIMEOUT=600
           ELAPSED=0
           while [ $ELAPSED -lt $TIMEOUT ]; do
-            STATUS=$(gh pr checks "$PR_NUM" --json state --jq '[.[].state] | all(. == "PASS" or . == "SKIP")' 2>/dev/null || echo "false")
-            COMPLETE=$(gh pr checks "$PR_NUM" --json state --jq '[.[].state] | any(. == "FAIL" or . == "ERROR")' 2>/dev/null || echo "false")
+            # gh pr checks --json state returns lowercase: pass, fail, pending, skipping
+            STATUS=$(gh pr checks "$PR_NUM" --json state --jq '[.[].state] | all(. == "pass" or . == "skip")' 2>/dev/null || echo "false")
+            FAILED=$(gh pr checks "$PR_NUM" --json state --jq '[.[].state] | any(. == "fail" or . == "error")' 2>/dev/null || echo "false")
 
-            if [ "$COMPLETE" = "true" ]; then
+            if [ "$FAILED" = "true" ]; then
               echo "CI checks failed — not merging"
               exit 0
             fi
