@@ -1,8 +1,10 @@
 """Auto-generated Add S3 Public Access Detector.
 
-Implement a new detector module to identify publicly accessible S3 buckets across AWS
-    accounts. The detector will check bucket ACLs, bucket policies, and block public
-    access settings. Includes unit tests with mocked AWS responses.
+Implement a new detector module to identify S3 buckets with public read/write access via
+    bucket policies or ACLs. This addresses a top cloud misconfiguration risk. The
+    detector will scan bucket policies for Principal: '*' with Allow effects, check ACL
+    grants for AllUsers/AuthenticatedUsers groups, and report findings with severity
+    ratings and remediation guidance.
 """
 
 from __future__ import annotations
@@ -20,9 +22,11 @@ logger = logging.getLogger(__name__)
 class S3PublicAccessDetector:
     """Scanner for Add S3 Public Access Detector.
 
-    Implement a new detector module to identify publicly accessible S3 buckets across AWS
-    accounts. The detector will check bucket ACLs, bucket policies, and block public
-    access settings. Includes unit tests with mocked AWS responses.
+    Implement a new detector module to identify S3 buckets with public read/write access via
+    bucket policies or ACLs. This addresses a top cloud misconfiguration risk. The
+    detector will scan bucket policies for Principal: '*' with Allow effects, check ACL
+    grants for AllUsers/AuthenticatedUsers groups, and report findings with severity
+    ratings and remediation guidance.
     """
 
     name: str = "Add S3 Public Access Detector"
@@ -53,7 +57,7 @@ class S3PublicAccessDetector:
         if not config.get("encryption_enabled", False):
             findings.append(
                 Finding(
-                    id="DET001-001",
+                    id="IMP001-001",
                     title="Encryption not enabled",
                     severity=Severity.HIGH,
                     resource_type="Cloud Resource",
@@ -70,7 +74,7 @@ class S3PublicAccessDetector:
         if config.get("publicly_accessible", False):
             findings.append(
                 Finding(
-                    id="DET001-002",
+                    id="IMP001-002",
                     title="Resource is publicly accessible",
                     severity=Severity.CRITICAL,
                     resource_type="Cloud Resource",
@@ -87,7 +91,7 @@ class S3PublicAccessDetector:
         if not config.get("logging_enabled", False):
             findings.append(
                 Finding(
-                    id="DET001-003",
+                    id="IMP001-003",
                     title="Logging not enabled",
                     severity=Severity.MEDIUM,
                     resource_type="Cloud Resource",
