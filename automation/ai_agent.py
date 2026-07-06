@@ -979,6 +979,20 @@ class SecurityLabAgent:
         # Update task dict so templates see normalized paths
         task["files_to_create"] = normalized_files
 
+        # Filter out files the agent must never touch (workflows, CI config, etc.)
+        # GitHub blocks GITHUB_TOKEN from pushing workflow changes, and overwriting
+        # existing CI/config files can break the pipeline.
+        _forbidden_prefixes = (".github/", ".gitignore", "pyproject.toml", "Makefile")
+        safe_files = [f for f in normalized_files if not f.startswith(_forbidden_prefixes)]
+        skipped = set(normalized_files) - set(safe_files)
+        if skipped:
+            logger.warning("Skipping forbidden paths (CI/config files): %s", skipped)
+        if not safe_files:
+            logger.warning("All files were forbidden — nothing to create")
+            return False
+        normalized_files = safe_files
+        task["files_to_create"] = normalized_files
+
         created: list[str] = []
         for rel_path in normalized_files:
             try:
