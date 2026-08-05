@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-
-from security_scanner.models import Finding
-
 
 class TestMultiCloudStorageBucketExposureDetector:
     """Unit tests for MultiCloudStorageBucketExposureDetector."""
 
     def test_scan_detects_missing_encryption(self) -> None:
         """Encryption check should flag unencrypted resources."""
-        from  import MultiCloudStorageBucketExposureDetector
+        from detectors.storage_bucket_exposure import MultiCloudStorageBucketExposureDetector
 
         scanner = MultiCloudStorageBucketExposureDetector()
         config = {
@@ -26,7 +22,7 @@ class TestMultiCloudStorageBucketExposureDetector:
 
     def test_scan_detects_public_access(self) -> None:
         """Public access check should flag exposed resources."""
-        from  import MultiCloudStorageBucketExposureDetector
+        from detectors.storage_bucket_exposure import MultiCloudStorageBucketExposureDetector
 
         scanner = MultiCloudStorageBucketExposureDetector()
         config = {
@@ -40,7 +36,7 @@ class TestMultiCloudStorageBucketExposureDetector:
 
     def test_scan_clean_config(self) -> None:
         """A fully-compliant config should produce no findings."""
-        from  import MultiCloudStorageBucketExposureDetector
+        from detectors.storage_bucket_exposure import MultiCloudStorageBucketExposureDetector
 
         scanner = MultiCloudStorageBucketExposureDetector()
         config = {
@@ -54,7 +50,7 @@ class TestMultiCloudStorageBucketExposureDetector:
 
     def test_scan_detects_missing_logging(self) -> None:
         """Logging check should flag resources without audit logs."""
-        from  import MultiCloudStorageBucketExposureDetector
+        from detectors.storage_bucket_exposure import MultiCloudStorageBucketExposureDetector
 
         scanner = MultiCloudStorageBucketExposureDetector()
         config = {
