@@ -982,7 +982,15 @@ class SecurityLabAgent:
         # Filter out files the agent must never touch (workflows, CI config, etc.)
         # GitHub blocks GITHUB_TOKEN from pushing workflow changes, and overwriting
         # existing CI/config files can break the pipeline.
-        _forbidden_prefixes = (".github/", ".gitignore", "pyproject.toml", "Makefile")
+        _forbidden_prefixes = (
+            ".github/",
+            ".gitignore",
+            "pyproject.toml",
+            "Makefile",
+            "infra/",
+            "research/",
+            "docs/",
+        )
         safe_files = [f for f in normalized_files if not f.startswith(_forbidden_prefixes)]
         skipped = set(normalized_files) - set(safe_files)
         if skipped:
