@@ -772,11 +772,7 @@ class SecurityLabAgent:
     @classmethod
     def _allowed_files(cls, files: list[str]) -> list[str]:
         """Normalize paths and drop forbidden ones."""
-        return [
-            p
-            for p in (cls._normalize_path(f) for f in files)
-            if not cls._is_forbidden_path(p)
-        ]
+        return [p for p in (cls._normalize_path(f) for f in files) if not cls._is_forbidden_path(p)]
 
     # ------------------------------------------------------------------
     # Main entry point
