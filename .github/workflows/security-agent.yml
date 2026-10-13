@@ -116,7 +116,7 @@ jobs:
 
             if [ "$STATUS" = "true" ]; then
               echo "All CI checks passed — merging"
-              gh pr merge "$PR_NUM" --squash
+              gh pr merge "$PR_NUM" --squash --delete-branch
               echo "Merged PR #$PR_NUM"
               exit 0
             fi

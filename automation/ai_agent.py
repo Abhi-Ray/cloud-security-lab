@@ -733,12 +733,50 @@ class SecurityLabAgent:
         config: Agent configuration.
     """
 
+    # Paths the agent must never create or modify. Workflow/config files
+    # can't be pushed with GITHUB_TOKEN and may break CI; Terraform can't
+    # be validated locally (only ruff + pytest run in validation).
+    _FORBIDDEN_PREFIXES = (
+        ".github/",
+        ".gitignore",
+        "pyproject.toml",
+        "Makefile",
+        "infra/",
+        "terraform/",
+    )
+    _FORBIDDEN_EXTENSIONS = (".tf", ".tfvars")
+
     def __init__(self, config: AgentConfig) -> None:
         self.config = config
         self._task_gen = TaskGenerator()
         self._ai_client = OpenRouterClient(config)
         self._git = GitManager(config.repo_path)
         self._repo = Path(config.repo_path)
+
+    @staticmethod
+    def _normalize_path(rel_path: str) -> str:
+        """Map bare Python file paths into ``src/`` or ``tests/``."""
+        if rel_path.endswith(".py") and not (
+            rel_path.startswith("src/") or rel_path.startswith("tests/")
+        ):
+            return f"tests/{rel_path}" if "test" in rel_path.lower() else f"src/{rel_path}"
+        return rel_path
+
+    @classmethod
+    def _is_forbidden_path(cls, rel_path: str) -> bool:
+        """Return *True* if the agent must not write to this path."""
+        return rel_path.startswith(cls._FORBIDDEN_PREFIXES) or rel_path.endswith(
+            cls._FORBIDDEN_EXTENSIONS
+        )
+
+    @classmethod
+    def _allowed_files(cls, files: list[str]) -> list[str]:
+        """Normalize paths and drop forbidden ones."""
+        return [
+            p
+            for p in (cls._normalize_path(f) for f in files)
+            if not cls._is_forbidden_path(p)
+        ]
 
     # ------------------------------------------------------------------
     # Main entry point
@@ -858,22 +896,31 @@ class SecurityLabAgent:
         if self.config.is_configured():
             task = self._try_ai_planning(state)
             if task is not None:
-                # Skip if all target files already exist (avoid duplicates)
                 target_files = set(task.get("files_to_create", []))
-                if not target_files or not existing.intersection(target_files):
+                if target_files and existing.intersection(target_files):
+                    logger.info("AI task targets existing files — skipping to avoid duplicate")
+                elif not self._allowed_files(list(target_files)):
+                    logger.info("AI task files are all forbidden paths — skipping")
+                else:
                     return task
-                logger.info("AI task targets existing files — skipping to avoid duplicate")
 
         # Fallback: pick from catalogue, preferring tasks whose files
-        # don't already exist
+        # don't already exist and aren't all forbidden
         logger.info("Using local task catalogue (AI unavailable or not configured)")
         for _ in range(self._task_gen.total_tasks):
             candidate = self._task_gen.get_next_task()
-            # Prefer tasks that create new files
-            if not existing.intersection(candidate.get("files_to_create", [])):
-                return candidate
+            files = candidate.get("files_to_create", [])
+            if existing.intersection(files):
+                continue
+            if not self._allowed_files(files):
+                logger.info(
+                    "Skipping catalogue task %s — all files are forbidden paths",
+                    candidate.get("id"),
+                )
+                continue
+            return candidate
 
-        # All tasks overlap — just return the next one
+        # All tasks overlap or are forbidden — just return the next one
         return self._task_gen.get_next_task()
 
     def _try_ai_planning(self, state: dict[str, Any]) -> dict[str, Any] | None:
@@ -965,44 +1012,24 @@ class SecurityLabAgent:
         # Normalize Python file paths so they live under src/ or tests/
         normalized_files: list[str] = []
         for rel_path in files:
-            normalized = rel_path
-            if rel_path.endswith(".py") and not (
-                rel_path.startswith("src/") or rel_path.startswith("tests/")
-            ):
-                if "test" in rel_path.lower():
-                    normalized = f"tests/{rel_path}"
-                else:
-                    normalized = f"src/{rel_path}"
+            normalized = self._normalize_path(rel_path)
+            if normalized != rel_path:
                 logger.info("Normalized %s -> %s", rel_path, normalized)
             normalized_files.append(normalized)
 
-        # Update task dict so templates see normalized paths
-        task["files_to_create"] = normalized_files
-
-        # Filter out files the agent must never touch (workflows, CI config, etc.)
-        # GitHub blocks GITHUB_TOKEN from pushing workflow changes, and overwriting
-        # existing CI/config files can break the pipeline.
-        _forbidden_prefixes = (
-            ".github/",
-            ".gitignore",
-            "pyproject.toml",
-            "Makefile",
-            "infra/",
-            "research/",
-            "docs/",
-        )
-        safe_files = [f for f in normalized_files if not f.startswith(_forbidden_prefixes)]
+        # Drop forbidden paths; a task whose files are all forbidden is a
+        # no-op success rather than a failure
+        safe_files = [f for f in normalized_files if not self._is_forbidden_path(f)]
         skipped = set(normalized_files) - set(safe_files)
         if skipped:
             logger.warning("Skipping forbidden paths (CI/config files): %s", skipped)
         if not safe_files:
-            logger.warning("All files were forbidden — nothing to create")
-            return False
-        normalized_files = safe_files
-        task["files_to_create"] = normalized_files
+            logger.warning("All files were forbidden — nothing to create (no-op)")
+            return True
+        task["files_to_create"] = safe_files
 
         created: list[str] = []
-        for rel_path in normalized_files:
+        for rel_path in safe_files:
             try:
                 full = self._repo / rel_path
                 full.parent.mkdir(parents=True, exist_ok=True)
@@ -1019,7 +1046,7 @@ class SecurityLabAgent:
             except Exception:
                 logger.exception("Failed to create %s", rel_path)
 
-        logger.info("Created %d/%d files", len(created), len(normalized_files))
+        logger.info("Created %d/%d files", len(created), len(safe_files))
         return len(created) > 0
 
     def _render_template(self, rel_path: str, task: dict[str, Any]) -> str:
